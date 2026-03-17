@@ -174,7 +174,7 @@ export default function HomePage() {
     window.setTimeout(() => {
       setStage("paper");
       setNotice("點一下紙條，看看它想對你說什麼。");
-    }, 820);
+    }, 980);
   }
 
   function revealMessage(nextMessage: ActiveMessage) {
@@ -452,7 +452,7 @@ export default function HomePage() {
                       ? { opacity: [0, 1, 0.96], y: [34, 12, 2], scale: [0.64, 0.9, 0.96], rotate: [0, -2, 0] }
                       : { opacity: 0, y: 30, scale: 0.65, rotate: 0 }
                 }
-                transition={{ duration: 0.54, delay: 0.18, ease: "easeOut" }}
+                transition={{ duration: 0.54, delay: 0.34, ease: "easeOut" }}
                 className="absolute left-1/2 top-[38%] z-30 -translate-x-1/2"
               >
                 <div className="h-[104px] w-[84px]">
@@ -482,6 +482,19 @@ export default function HomePage() {
               <motion.div
                 animate={
                   stage === "paper"
+                    ? { opacity: 0, x: -22, y: 44, rotate: -42, scale: 0.76 }
+                    : stage === "cracking"
+                      ? { opacity: [0, 1, 0.94, 0], x: [-2, -12, -34, -42], y: [0, 14, 36, 48], rotate: [0, -22, -40, -56], scale: [0.6, 0.9, 0.82, 0.72] }
+                      : { opacity: 0, x: 0, y: 0, rotate: 0, scale: 0.4 }
+                }
+                transition={{ duration: 0.62, delay: 0.08, ease: "easeOut" }}
+                className="absolute z-40 h-[64px] w-[64px]"
+              >
+                <Image src="/cookie/center-shard-left.svg" alt="" width={64} height={64} className="h-full w-full select-none" draggable={false} />
+              </motion.div>
+              <motion.div
+                animate={
+                  stage === "paper"
                     ? { opacity: 1, x: 70, y: 20, rotate: 34, scale: 0.96 }
                     : stage === "cracking"
                       ? {
@@ -497,6 +510,19 @@ export default function HomePage() {
                 className="absolute z-30 h-[148px] w-[152px]"
               >
                 <Image src="/cookie/right-half.svg" alt="" width={152} height={148} className="h-full w-full select-none" draggable={false} />
+              </motion.div>
+              <motion.div
+                animate={
+                  stage === "paper"
+                    ? { opacity: 0, x: 24, y: 46, rotate: 42, scale: 0.76 }
+                    : stage === "cracking"
+                      ? { opacity: [0, 1, 0.94, 0], x: [2, 12, 36, 46], y: [0, 16, 38, 50], rotate: [0, 22, 40, 58], scale: [0.6, 0.9, 0.82, 0.72] }
+                      : { opacity: 0, x: 0, y: 0, rotate: 0, scale: 0.4 }
+                }
+                transition={{ duration: 0.62, delay: 0.1, ease: "easeOut" }}
+                className="absolute z-40 h-[64px] w-[64px]"
+              >
+                <Image src="/cookie/center-shard-right.svg" alt="" width={64} height={64} className="h-full w-full select-none" draggable={false} />
               </motion.div>
             </motion.button>
 
