@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { toBlob } from "html-to-image";
+import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   FavoriteFortune,
@@ -55,55 +56,6 @@ const dustPieces = [
   { id: "dust-5", x: -44, y: 24, delay: 0.16 },
   { id: "dust-6", x: 44, y: 28, delay: 0.18 }
 ];
-
-function FullCookieArtwork() {
-  return (
-    <div className="relative flex h-full w-full items-center justify-center">
-      <span
-        className="select-none text-[172px] leading-none"
-        style={{
-          filter: "drop-shadow(0 18px 20px rgba(120,72,25,0.24))",
-          transform: "rotate(5deg)"
-        }}
-      >
-        🥠
-      </span>
-    </div>
-  );
-}
-
-function CookieHalfArtwork({ side }: { side: "left" | "right" }) {
-  const isLeft = side === "left";
-
-  return (
-    <div className="relative h-full w-full overflow-hidden">
-      <span
-        className={`absolute top-1/2 select-none text-[172px] leading-none ${isLeft ? "left-0" : "right-0"}`}
-        style={{
-          filter: "drop-shadow(0 14px 18px rgba(120,72,25,0.22))",
-          transform: `translateY(-50%) rotate(${isLeft ? "-2deg" : "2deg"})`
-        }}
-      >
-        🥠
-      </span>
-      <span
-        className={`absolute top-[38%] h-[70px] w-[22px] rounded-full bg-[#744214]/25 blur-[8px] ${isLeft ? "right-0" : "left-0"}`}
-      />
-    </div>
-  );
-}
-
-function FoldedPaperArtwork() {
-  return (
-    <svg viewBox="0 0 120 160" className="h-full w-full drop-shadow-[0_14px_22px_rgba(117,87,58,0.18)]">
-      <rect x="18" y="18" width="42" height="124" rx="12" fill="#fffdf8" stroke="#d8c2a7" />
-      <rect x="60" y="18" width="42" height="124" rx="12" fill="#f7eedf" stroke="#d8c2a7" />
-      <path d="M60 20V142" stroke="#d0b99b" strokeOpacity="0.8" />
-      <path d="M28 48H92" stroke="#d8c2a7" strokeOpacity="0.5" />
-      <path d="M28 79H92" stroke="#d8c2a7" strokeOpacity="0.35" />
-    </svg>
-  );
-}
 
 export default function HomePage() {
   const [seed, setSeed] = useState("");
@@ -479,7 +431,7 @@ export default function HomePage() {
                 transition={{ duration: 0.42, ease: "easeOut" }}
                 className="absolute z-20 h-[176px] w-[236px]"
               >
-                <FullCookieArtwork />
+                <Image src="/cookie/full.svg" alt="" width={236} height={176} className="h-full w-full select-none" draggable={false} />
               </motion.div>
 
               <motion.span
@@ -504,7 +456,7 @@ export default function HomePage() {
                 className="absolute left-1/2 top-[38%] z-30 -translate-x-1/2"
               >
                 <div className="h-[104px] w-[84px]">
-                  <FoldedPaperArtwork />
+                  <Image src="/cookie/folded-paper.svg" alt="" width={84} height={104} className="h-full w-full select-none" draggable={false} />
                 </div>
               </motion.div>
 
@@ -519,7 +471,7 @@ export default function HomePage() {
                 transition={{ duration: 0.56, ease: "easeOut" }}
                 className="absolute z-30 h-[150px] w-[156px]"
               >
-                <CookieHalfArtwork side="left" />
+                <Image src="/cookie/left-half.svg" alt="" width={156} height={150} className="h-full w-full select-none" draggable={false} />
               </motion.div>
               <motion.div
                 animate={
@@ -532,7 +484,7 @@ export default function HomePage() {
                 transition={{ duration: 0.56, ease: "easeOut" }}
                 className="absolute z-30 h-[150px] w-[156px]"
               >
-                <CookieHalfArtwork side="right" />
+                <Image src="/cookie/right-half.svg" alt="" width={156} height={150} className="h-full w-full select-none" draggable={false} />
               </motion.div>
             </motion.button>
 
