@@ -1,0 +1,22 @@
+{
+  "name": "Fortune Cookie Daily",
+  "short_name": "Fortune Cookie",
+  "description": "每天拆開一顆幸運餅乾，收下今日的小小鼓勵。",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fff4df",
+  "theme_color": "#f7d7a6",
+  "lang": "zh-Hant",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/icons/apple-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
