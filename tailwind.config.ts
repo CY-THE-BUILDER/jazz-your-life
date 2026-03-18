@@ -9,28 +9,24 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        sand: {
-          50: "#fffaf0",
-          100: "#fef2d6",
-          200: "#f9d8a0",
-          300: "#efba6d",
-          400: "#d99644",
-          500: "#b56e2d"
-        },
-        ink: "#5a4028",
-        accent: "#d4633a"
+        ink: "#101514",
+        cream: "#f5efdf",
+        mist: "#b2bab2",
+        card: "#17201d",
+        brass: "#b9975b",
+        olive: {
+          50: "#d7e1cf",
+          100: "#c3d0b8",
+          200: "#a8bb98"
+        }
       },
       fontFamily: {
-        sans: ["'PingFang TC'", "'Noto Sans TC'", "'Heiti TC'", "sans-serif"],
-        display: ["'Iowan Old Style'", "'Baskerville'", "'Palatino Linotype'", "serif"]
+        sans: ["'Avenir Next'", "'PingFang TC'", "'Noto Sans TC'", "sans-serif"],
+        display: ["'Iowan Old Style'", "'Baskerville'", "'Times New Roman'", "serif"]
       },
       boxShadow: {
-        paper: "0 18px 50px rgba(132, 90, 46, 0.18)",
-        cookie: "0 24px 60px rgba(152, 96, 39, 0.26)"
-      },
-      backgroundImage: {
-        paper:
-          "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,239,223,0.95)), radial-gradient(circle at top, rgba(212, 175, 121, 0.14), transparent 42%)"
+        panel: "0 28px 70px rgba(4, 8, 8, 0.28)",
+        glow: "0 8px 24px rgba(192, 170, 120, 0.18)"
       }
     }
   },

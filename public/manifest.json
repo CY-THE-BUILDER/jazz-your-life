@@ -1,12 +1,12 @@
 {
-  "name": "Fortune Cookie Daily",
-  "short_name": "Fortune Cookie",
-  "description": "每天拆開一顆幸運餅乾，收下今日的小小鼓勵。",
+  "name": "jazz-your-life",
+  "short_name": "jazz-your-life",
+  "description": "A calm daily jazz companion for Spotify listeners who want to start with the right record.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#fff4df",
-  "theme_color": "#f7d7a6",
-  "lang": "zh-Hant",
+  "background_color": "#09100f",
+  "theme_color": "#09100f",
+  "lang": "en",
   "icons": [
     {
       "src": "/icons/icon.svg",
