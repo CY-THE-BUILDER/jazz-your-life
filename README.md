@@ -1,6 +1,19 @@
 # jazz-your-life
 
-A curated daily jazz companion built with Next.js 14, TypeScript, Tailwind CSS, localStorage, and Spotify OAuth.
+每天替你先收好幾張值得按下播放的爵士選擇。
+
+`jazz-your-life` 是一個為 Spotify 重度爵士樂愛好者打造的每日推薦 Web App。它會用最短的點擊路徑，先給你今天可以從哪裡開始聽；連接 Spotify 後，也會根據最近的常聽、收藏與播放紀錄，調整推薦方向。
+
+Live URL: [https://jazz-your-life.vercel.app](https://jazz-your-life.vercel.app)
+
+## Product Highlights
+
+- 每日爵士推薦首頁，支援 `Classic`、`Exploratory`、`Fusion`、`Late Night`、`Focus`
+- 一鍵前往 Spotify 播放
+- 支援分享與本地收藏
+- Spotify OAuth with PKCE
+- 根據 Spotify 聆聽訊號產生個人化推薦
+- 未登入時也會用公開資料源補齊真實專輯封面，而不是只顯示預設圖
 
 ## Local Development
 
@@ -28,7 +41,7 @@ A curated daily jazz companion built with Next.js 14, TypeScript, Tailwind CSS, 
 
    ```text
    http://127.0.0.1:3000/api/spotify/callback
-   https://fortunecookiedaily.cythebuilder.com/api/spotify/callback
+   https://jazz-your-life.vercel.app/api/spotify/callback
    ```
 
 5. Fill in `SPOTIFY_CLIENT_ID` in `.env.local`.
@@ -44,6 +57,7 @@ A curated daily jazz companion built with Next.js 14, TypeScript, Tailwind CSS, 
 ## Verification
 
 ```bash
+npm test
 npm run lint
 npm run build
 ```
@@ -54,12 +68,19 @@ npm run build
 2. Import the GitHub repo into Vercel as `jazz-your-life`.
 3. Use the default Next.js build settings.
 4. Add `SPOTIFY_CLIENT_ID` to production env.
-5. Redeploy after each push.
+5. Make sure Spotify Dashboard also allowlists:
 
-## Features
+   ```text
+   https://jazz-your-life.vercel.app/api/spotify/callback
+   ```
 
-- Daily curated jazz picks with quick vibe filters
-- Save and share picks with local persistence
-- Spotify OAuth login via Authorization Code with PKCE
-- Spotify session detection and disconnect flow
-- PWA manifest and offline-ready service worker via `next-pwa`
+6. Redeploy after each push.
+
+## Stack
+
+- Next.js 14 App Router
+- TypeScript
+- Tailwind CSS
+- Vitest
+- Spotify Web API + OAuth PKCE
+- `next-pwa`
