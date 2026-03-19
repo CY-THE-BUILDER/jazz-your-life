@@ -259,8 +259,8 @@ export function buildAlbumRecommendationReason(params: {
   sourceTrackTitle?: string;
   sourceAlbumTitle?: string;
 }) {
-  const evidence: string[] = [];
-  const support: string[] = [];
+  const leadLines: string[] = [];
+  const supportLines: string[] = [];
   const favoriteDecade = describeDecade(params.tasteProfile.favoriteDecadeStart);
   const topArtists = new Set(params.tasteProfile.topArtistNames.map(normalizeText));
   const savedArtists = new Set(params.tasteProfile.savedArtistNames.map(normalizeText));
@@ -269,70 +269,76 @@ export function buildAlbumRecommendationReason(params: {
   const sourceArtistKey = normalizeText(params.sourceArtistName);
 
   if (topArtists.has(albumArtistKey) || topArtists.has(sourceArtistKey)) {
-    evidence.push(`你最近明顯常回到 ${params.sourceArtistName}，這張把那條線拉成更完整的一次聆聽。`);
+    leadLines.push(`你最近常回到 ${params.sourceArtistName}，這張剛好把那股熟悉的氣味留得更完整。`);
   }
 
   if (savedArtists.has(albumArtistKey)) {
-    evidence.push(`你收藏過 ${params.albumArtist} 相關的內容，回到這張專輯本身會比單點其中一首更對味。`);
+    leadLines.push(`既然你收過 ${params.albumArtist} 的聲音，回到這張專輯本身，會比停在片段更對味。`);
   }
 
   if (recentArtists.has(albumArtistKey) && params.sourceTrackTitle) {
-    evidence.push(`你最近播過〈${params.sourceTrackTitle}〉，回到它所在的整張專輯，情緒會更連貫。`);
+    leadLines.push(`你最近播過〈${params.sourceTrackTitle}〉，把它放回整張裡聽，情緒會自然連成一條線。`);
   } else if (recentArtists.has(albumArtistKey)) {
-    evidence.push(`你最近剛聽過 ${params.albumArtist}，這張接起來很自然。`);
+    leadLines.push(`你最近剛聽過 ${params.albumArtist}，這張接上去幾乎不需要重新進入狀態。`);
   }
 
   if (
     params.sourceAlbumTitle &&
     normalizeText(params.sourceAlbumTitle) !== normalizeText(params.albumTitle)
   ) {
-    evidence.push(`你最近常聽的《${params.sourceAlbumTitle}》如果想再往外延伸，這張會是很順的一步。`);
+    leadLines.push(`如果《${params.sourceAlbumTitle}》已經在你耳邊待了一陣子，接著聽《${params.albumTitle}》會很順。`);
   }
 
   if (params.origin === "search") {
-    evidence.push(`沿著 ${params.sourceArtistName} 這條線往外走時，《${params.albumTitle}》會比只停在單曲更能看出完整樣子。`);
+    leadLines.push(`沿著 ${params.sourceArtistName} 這條線往外再走一點，《${params.albumTitle}》會把輪廓打得更開。`);
   }
 
   if (params.albumYear > 0) {
-    evidence.push(`《${params.albumTitle}》身上的 ${params.albumYear} 年代感，和你最近偏好的聲響區間很接近。`);
+    supportLines.push(`它身上那種 ${params.albumYear} 年代的聲響密度，和你最近常停留的區間靠得很近。`);
   }
 
   if (params.tasteProfile.favoriteGenres.some((genre) => normalizeText(genre).includes(normalizeText(params.subgenre)))) {
-    support.push(`你的常聽裡一直有 ${params.subgenre} 這種質地，這張很容易接上。`);
+    supportLines.push(`你最近常聽的質地裡，本來就有 ${params.subgenre} 這一面，所以它落下來很自然。`);
   } else {
-    support.push(`它的 ${params.subgenre.toLowerCase()} 氣質很完整，適合整張放完。`);
+    supportLines.push(`它的 ${params.subgenre} 氣質收得很完整，適合從頭放到尾。`);
   }
 
   if (favoriteDecade) {
-    support.push(`你最近常聽的年代感多半落在 ${favoriteDecade}，這張也在那個聲響區間裡。`);
+    supportLines.push(`如果你最近耳朵偏向 ${favoriteDecade} 的聲音，這張會很快進到狀態。`);
   }
 
   if (params.activeVibe === "Late Night") {
-    support.push("夜裡把整張放完，層次會比停在單曲更耐聽。");
+    supportLines.push("夜裡把整張慢慢放完，層次會比停在一個段落更耐聽。");
   }
 
   if (params.activeVibe === "Focus") {
-    support.push("它的推進感收得很整齊，適合陪一段比較長的專注。");
+    supportLines.push("它的推進感收得很穩，適合陪一段不被打斷的專注。");
   }
 
   if (params.activeVibe === "Fusion") {
-    support.push("節奏和電氣感是成套成立的，整張聽會更過癮。");
+    supportLines.push("節奏和電氣感不是點到為止，而是整張都成立。");
   }
 
   if (params.activeVibe === "Exploratory") {
-    support.push("這張的轉折和留白都夠，從頭聽到尾才會真的打開。");
+    supportLines.push("它的轉折和留白都夠，從頭聽到尾才會真的打開。");
   }
 
   if (params.activeVibe === "Classic") {
-    support.push("它的進入門檻很低，但細節經得起一整張慢慢聽。");
+    supportLines.push("它進入得很輕，但細節經得起一整張慢慢聽。");
   }
 
-  const candidates = [...evidence, ...support];
-  const primaryPool = evidence.length > 0 ? evidence : support;
+  const leadPool =
+    leadLines.length > 0
+      ? leadLines
+      : [`《${params.albumTitle}》和你最近的聆聽方向貼得很近，今天從這裡開始剛好。`];
+  const supportPool =
+    supportLines.length > 0
+      ? supportLines
+      : ["如果今天不想選太久，直接把整張交給它就好。"];
   const primary =
-    primaryPool[hashValue(params.albumId) % Math.max(primaryPool.length, 1)] ??
-    `這張和你最近的聆聽方向很貼近，值得直接從第一首開始。`;
-  const secondaryPool = candidates.filter((sentence) => sentence !== primary);
+    leadPool[hashValue(params.albumId) % Math.max(leadPool.length, 1)] ??
+    `《${params.albumTitle}》和你最近的聆聽方向貼得很近，今天從這裡開始剛好。`;
+  const secondaryPool = supportPool.filter((sentence) => sentence !== primary);
   const secondary =
     secondaryPool[hashValue(params.albumId) % Math.max(secondaryPool.length, 1)] ??
     "如果今天想少選一點，直接把整張交給它就好。";

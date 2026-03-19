@@ -152,8 +152,10 @@ describe("spotify recommendation mapping", () => {
       sourceAlbumTitle: "Head Hunters"
     });
 
-    expect(reason).toContain("Herbie Hancock");
     expect(reason).toContain("Head Hunters");
-    expect(reason).not.toContain("這首");
+    expect(reason).toContain("Thrust");
+    expect(reason).not.toContain("數據");
+    expect(reason).not.toContain("分析");
+    expect(reason).not.toContain("觀察");
   });
 });
