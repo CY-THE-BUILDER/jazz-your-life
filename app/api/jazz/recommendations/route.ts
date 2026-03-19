@@ -7,10 +7,13 @@ import {
 } from "@/lib/spotify-auth";
 import {
   buildAlbumPick,
+  buildAlbumRecommendationReason,
   buildCuratedFeed,
+  buildTasteProfile,
   buildTrackPick,
   dedupePicks,
   isJazzAdjacentArtist,
+  ListenerTasteProfile,
   parseVibe,
   scorePickForVibe,
   SpotifyAlbumEntity,
@@ -45,6 +48,10 @@ function matchesCuratedJazzArtist(name: string) {
       pick.artist.toLowerCase().includes(lowered) ||
       lowered.includes(pick.artist.toLowerCase())
   );
+}
+
+function isRecommendableAlbum(album: SpotifyAlbumEntity) {
+  return album.album_type !== "single";
 }
 
 async function getTopArtists(accessToken: string) {
@@ -143,8 +150,8 @@ async function buildSearchDrivenPicks(
   accessToken: string,
   activeVibe: JazzPick["vibeTags"][number],
   seedArtists: SpotifyArtistEntity[],
-  excludedTrackIds: Set<string>,
-  excludedAlbumIds: Set<string>
+  excludedAlbumIds: Set<string>,
+  tasteProfile: ListenerTasteProfile
 ) {
   const searchResults = await Promise.all(
     seedArtists.slice(0, 4).map(async (artist) => {
@@ -156,22 +163,37 @@ async function buildSearchDrivenPicks(
         queries.map((query) =>
           searchSpotify(accessToken, {
             q: query,
-            type: "track,album",
+            type: "album",
             limit: 5
           })
         )
       );
 
       const picks = responses.flatMap((response) => {
-        const trackPicks = (response.tracks?.items ?? [])
-          .filter((track) => !excludedTrackIds.has(track.id))
-          .map((track) => buildTrackPick(track, artist, activeVibe, "search"));
-
         const albumPicks = (response.albums?.items ?? [])
-          .filter((album) => !excludedAlbumIds.has(album.id))
-          .map((album) => buildAlbumPick(album, artist, activeVibe, "search"));
+          .filter((album) => isRecommendableAlbum(album) && !excludedAlbumIds.has(album.id))
+          .map((album) => {
+            const basePick = buildAlbumPick(album, artist, activeVibe, "search");
+            return buildAlbumPick(
+              album,
+              artist,
+              activeVibe,
+              "search",
+              buildAlbumRecommendationReason({
+                albumId: album.id,
+                albumTitle: album.name,
+                albumArtist: basePick.artist,
+                albumYear: basePick.year,
+                subgenre: basePick.subgenre,
+                activeVibe,
+                tasteProfile,
+                sourceArtistName: artist.name,
+                origin: "search"
+              })
+            );
+          });
 
-        return [...trackPicks, ...albumPicks];
+        return albumPicks;
       });
 
       return picks.sort(
@@ -190,7 +212,8 @@ function buildSignalDrivenPicks(
   topArtists: SpotifyArtistEntity[],
   topTracks: SpotifyTrackEntity[],
   recentlyPlayed: SpotifyTrackEntity[],
-  savedTracks: SpotifyTrackEntity[]
+  savedTracks: SpotifyTrackEntity[],
+  tasteProfile: ListenerTasteProfile
 ) {
   const topArtistMap = new Map(topArtists.map((artist) => [artist.id, artist]));
   const candidates = [
@@ -206,12 +229,32 @@ function buildSignalDrivenPicks(
           track.artists
             .map((artist) => topArtistMap.get(artist.id) ?? artist)
             .find(isJazzAdjacentArtist) ?? track.artists[0];
+        const basePick = buildAlbumPick(track.album, sourceArtist, activeVibe, origin);
 
         return {
-          pick: buildTrackPick(track, sourceArtist, activeVibe, origin),
+          pick: buildAlbumPick(
+            track.album,
+            sourceArtist,
+            activeVibe,
+            origin,
+            buildAlbumRecommendationReason({
+              albumId: track.album.id,
+              albumTitle: basePick.title,
+              albumArtist: basePick.artist,
+              albumYear: basePick.year,
+              subgenre: basePick.subgenre,
+              activeVibe,
+              tasteProfile,
+              sourceArtistName: sourceArtist.name,
+              origin,
+              sourceTrackTitle: track.name,
+              sourceAlbumTitle: track.album.name
+            })
+          ),
           allowed:
-            isJazzAdjacentArtist(sourceArtist) ||
-            matchesCuratedJazzArtist(sourceArtist.name)
+            isRecommendableAlbum(track.album) &&
+            (isJazzAdjacentArtist(sourceArtist) ||
+              matchesCuratedJazzArtist(sourceArtist.name))
         };
       })
       .filter((entry) => entry.allowed)
@@ -242,16 +285,12 @@ export async function GET(request: NextRequest) {
       getRecentlyPlayed(accessToken),
       getSavedTracks(accessToken)
     ]);
+    const tasteProfile = buildTasteProfile(topArtists, topTracks, recentlyPlayed, savedTracks);
 
     const seedArtists = topArtists.filter(
       (artist) => isJazzAdjacentArtist(artist) || matchesCuratedJazzArtist(artist.name)
     );
 
-    const excludedTrackIds = new Set([
-      ...topTracks.map((track) => track.id),
-      ...recentlyPlayed.map((track) => track.id),
-      ...savedTracks.map((track) => track.id)
-    ]);
     const excludedAlbumIds = new Set([
       ...topTracks.map((track) => track.album.id),
       ...recentlyPlayed.map((track) => track.album.id),
@@ -262,15 +301,16 @@ export async function GET(request: NextRequest) {
       accessToken,
       vibe,
       seedArtists,
-      excludedTrackIds,
-      excludedAlbumIds
+      excludedAlbumIds,
+      tasteProfile
     );
     const signalPicks = buildSignalDrivenPicks(
       vibe,
       topArtists,
       topTracks,
       recentlyPlayed,
-      savedTracks
+      savedTracks,
+      tasteProfile
     );
     const personalizedPicks = dedupePicks([...searchedPicks, ...signalPicks])
       .sort((left, right) => scorePickForVibe(right, vibe) - scorePickForVibe(left, vibe))

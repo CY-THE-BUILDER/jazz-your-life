@@ -55,6 +55,22 @@ export function getSpotifyRedirectUri(origin: string) {
   return new URL("/api/spotify/callback", origin).toString();
 }
 
+export function buildSpotifyAuthorizeUrl(params: {
+  origin: string;
+  state: string;
+  challenge: string;
+}) {
+  const url = new URL("https://accounts.spotify.com/authorize");
+  url.searchParams.set("response_type", "code");
+  url.searchParams.set("client_id", getSpotifyClientId());
+  url.searchParams.set("scope", getSpotifyScopes());
+  url.searchParams.set("redirect_uri", getSpotifyRedirectUri(params.origin));
+  url.searchParams.set("state", params.state);
+  url.searchParams.set("code_challenge_method", "S256");
+  url.searchParams.set("code_challenge", params.challenge);
+  return url;
+}
+
 function createBase64Url(input: Buffer) {
   return input
     .toString("base64")

@@ -88,16 +88,16 @@ export const jazzPicks: JazzPick[] = [
   withCover(
     {
       id: "time-out",
-      title: "Take Five",
+      title: "Time Out",
       artist: "The Dave Brubeck Quartet",
-      type: "track",
+      type: "album",
       subgenre: "Cool Jazz",
       vibeTags: ["Classic", "Focus"],
-      recommendationReason: "節拍有點斜，卻不費力，適合把思緒從雜訊裡慢慢校準回來。",
+      recommendationReason: "節拍和留白都收得很漂亮，適合把注意力慢慢帶回來，也適合整張放完。",
       spotifyUrl: "https://open.spotify.com/track/1YQWosTIljIvxAgHWTp7KP",
       shareUrl: "https://open.spotify.com/track/1YQWosTIljIvxAgHWTp7KP",
       year: 1959,
-      durationLabel: "5 min",
+      durationLabel: "38 min",
       accentColor: "#8aa190",
       source: "curated"
     },
@@ -142,16 +142,16 @@ export const jazzPicks: JazzPick[] = [
   withCover(
     {
       id: "heavy-weather",
-      title: "Birdland",
+      title: "Heavy Weather",
       artist: "Weather Report",
-      type: "track",
+      type: "album",
       subgenre: "Fusion",
       vibeTags: ["Fusion", "Exploratory", "Focus"],
-      recommendationReason: "如果你今天想把爵士聽得更開闊，這首會像一道帶電的天際線。",
+      recommendationReason: "律動、空間感和電氣聲響都很立體，想把 Fusion 聽得更開闊時，整張最過癮。",
       spotifyUrl: "https://open.spotify.com/track/5lXzHqVhkjz0Sx6wW5y1rN",
       shareUrl: "https://open.spotify.com/track/5lXzHqVhkjz0Sx6wW5y1rN",
       year: 1977,
-      durationLabel: "6 min",
+      durationLabel: "37 min",
       accentColor: "#cba55f",
       source: "curated"
     },
@@ -178,16 +178,16 @@ export const jazzPicks: JazzPick[] = [
   withCover(
     {
       id: "black-radio",
-      title: "Afro Blue",
+      title: "Black Radio",
       artist: "Robert Glasper Experiment",
-      type: "track",
+      type: "album",
       subgenre: "Contemporary Jazz",
       vibeTags: ["Late Night", "Fusion", "Exploratory"],
-      recommendationReason: "爵士、靈魂與夜色混在一起的時候，這首有種非常當代的從容。",
+      recommendationReason: "爵士、靈魂和夜色在這張裡自然疊在一起，想把晚上的氛圍聽完整，從這裡開始很對。",
       spotifyUrl: "https://open.spotify.com/track/08V0DjxLNpgcN4Yj7R0Q4e",
       shareUrl: "https://open.spotify.com/track/08V0DjxLNpgcN4Yj7R0Q4e",
       year: 2012,
-      durationLabel: "7 min",
+      durationLabel: "57 min",
       accentColor: "#b46e54",
       source: "curated"
     },
@@ -232,16 +232,16 @@ export const jazzPicks: JazzPick[] = [
   withCover(
     {
       id: "the-epic",
-      title: "Change of the Guard",
+      title: "The Epic",
       artist: "Kamasi Washington",
-      type: "track",
+      type: "album",
       subgenre: "Spiritual Jazz",
       vibeTags: ["Exploratory", "Focus"],
-      recommendationReason: "編制很大，情緒也很大，但它不是喧鬧，而是一種非常寬闊的召喚。",
+      recommendationReason: "規模很大，但不是炫技式地鋪滿，而是把情緒和敘事慢慢推到很遠的地方。",
       spotifyUrl: "https://open.spotify.com/track/2S6jGJd1iA4Y8C5dB7Pq4W",
       shareUrl: "https://open.spotify.com/track/2S6jGJd1iA4Y8C5dB7Pq4W",
       year: 2015,
-      durationLabel: "12 min",
+      durationLabel: "173 min",
       accentColor: "#ad8256",
       source: "curated"
     },

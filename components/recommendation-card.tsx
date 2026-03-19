@@ -1,7 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { getSpotifyActionUrl } from "@/lib/spotify-actions";
+import type { MouseEvent } from "react";
+import { getSpotifyActionUrl, getSpotifyNavigationTarget } from "@/lib/spotify-actions";
 import { JazzPick } from "@/types/jazz";
 
 type RecommendationCardProps = {
@@ -17,6 +18,18 @@ export function RecommendationCard({
   onToggleSave,
   onShare
 }: RecommendationCardProps) {
+  const spotifyHref = getSpotifyActionUrl(pick);
+
+  function handleOpenSpotify(event: MouseEvent<HTMLAnchorElement>) {
+    const actionUrl = getSpotifyActionUrl(pick, navigator.userAgent);
+    const target = getSpotifyNavigationTarget(navigator.userAgent);
+
+    if (target === "_self") {
+      event.preventDefault();
+      window.location.assign(actionUrl);
+    }
+  }
+
   return (
     <article className="group overflow-hidden rounded-[28px] border border-white/10 bg-card/90 shadow-panel backdrop-blur transition duration-300 hover:-translate-y-1 hover:border-white/20">
       <div className="relative aspect-square overflow-hidden">
@@ -65,9 +78,10 @@ export function RecommendationCard({
 
         <div className="flex flex-wrap gap-3">
           <a
-            href={getSpotifyActionUrl(pick)}
+            href={spotifyHref}
             target="_blank"
             rel="noreferrer"
+            onClick={handleOpenSpotify}
             className="rounded-full bg-olive-50 px-4 py-2 text-sm font-medium text-ink transition hover:bg-olive-100"
           >
             前往 Spotify

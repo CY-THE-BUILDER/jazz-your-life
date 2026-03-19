@@ -2,6 +2,13 @@ import { describe, expect, it } from "vitest";
 import { jazzPicks } from "@/data/jazz-picks";
 
 describe("curated jazz picks", () => {
+  it("only ship album recommendations in the curated feed", () => {
+    for (const pick of jazzPicks) {
+      expect(pick.type).toBe("album");
+      expect(pick.durationLabel.toLowerCase()).not.toBe("album");
+    }
+  });
+
   it("use spotify search urls instead of stale hardcoded ids", () => {
     for (const pick of jazzPicks) {
       expect(pick.spotifyUrl.startsWith("https://open.spotify.com/search/")).toBe(true);

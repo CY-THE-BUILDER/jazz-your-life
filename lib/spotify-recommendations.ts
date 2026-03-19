@@ -1,6 +1,7 @@
 import { JazzPick, RecommendationFeed, Vibe } from "@/types/jazz";
 
 export type RecommendationOrigin = "top" | "recent" | "saved" | "search";
+export type ListenerSignal = "top" | "recent" | "saved";
 
 export type SpotifyArtistEntity = {
   id: string;
@@ -31,6 +32,14 @@ export type SpotifyTrackEntity = {
   external_urls?: { spotify?: string };
 };
 
+export type ListenerTasteProfile = {
+  topArtistNames: string[];
+  recentArtistNames: string[];
+  savedArtistNames: string[];
+  favoriteGenres: string[];
+  favoriteDecadeStart: number | null;
+};
+
 const vibeValues: Vibe[] = ["Classic", "Exploratory", "Fusion", "Late Night", "Focus"];
 
 const genreToVibes: Array<{ match: RegExp; vibes: Vibe[]; subgenre: string }> = [
@@ -49,6 +58,35 @@ export function parseVibe(value: string | null): Vibe {
 export function formatMinutes(durationMs: number) {
   const minutes = Math.max(1, Math.round(durationMs / 60000));
   return `${minutes} min`;
+}
+
+function normalizeText(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+function describeDecade(year: number | null) {
+  if (!year) {
+    return null;
+  }
+
+  const decade = Math.floor(year / 10) * 10;
+  return `${decade}s`;
+}
+
+function uniqueByFrequency(values: string[]) {
+  const counts = new Map<string, number>();
+
+  values.forEach((value) => {
+    counts.set(value, (counts.get(value) ?? 0) + 1);
+  });
+
+  return [...counts.entries()]
+    .sort((left, right) => right[1] - left[1])
+    .map(([value]) => value);
+}
+
+function hashValue(value: string) {
+  return [...value].reduce((sum, char) => sum + char.charCodeAt(0), 0);
 }
 
 export function buildSpotifySearchUrl(params: {
@@ -76,6 +114,34 @@ export function inferVibes(genres: string[], fallback: Vibe): { vibeTags: Vibe[]
   };
 }
 
+export function buildTasteProfile(
+  topArtists: SpotifyArtistEntity[],
+  topTracks: SpotifyTrackEntity[],
+  recentlyPlayed: SpotifyTrackEntity[],
+  savedTracks: SpotifyTrackEntity[]
+): ListenerTasteProfile {
+  const allAlbumYears = [...topTracks, ...recentlyPlayed, ...savedTracks]
+    .map((track) => Number(track.album.release_date?.slice(0, 4) ?? ""))
+    .filter((year) => !Number.isNaN(year));
+
+  return {
+    topArtistNames: uniqueByFrequency(topArtists.map((artist) => artist.name)).slice(0, 6),
+    recentArtistNames: uniqueByFrequency(
+      recentlyPlayed.flatMap((track) => track.artists.map((artist) => artist.name))
+    ).slice(0, 6),
+    savedArtistNames: uniqueByFrequency(
+      savedTracks.flatMap((track) => track.artists.map((artist) => artist.name))
+    ).slice(0, 6),
+    favoriteGenres: uniqueByFrequency(topArtists.flatMap((artist) => artist.genres ?? [])).slice(0, 4),
+    favoriteDecadeStart:
+      allAlbumYears.length > 0
+        ? Math.floor(
+            allAlbumYears.reduce((sum, year) => sum + year, 0) / allAlbumYears.length / 10
+          ) * 10
+        : null
+  };
+}
+
 export const vibeProfiles: Record<
   Vibe,
   {
@@ -92,7 +158,7 @@ export const vibeProfiles: Record<
       [1950, 1959],
       [1960, 1969]
     ],
-    preferredTypes: ["album", "track"]
+    preferredTypes: ["album"]
   },
   Exploratory: {
     searchTerms: ["spiritual jazz", "post-bop", "contemporary jazz"],
@@ -101,7 +167,7 @@ export const vibeProfiles: Record<
       [1960, 1969],
       [2000, 2035]
     ],
-    preferredTypes: ["album", "track"]
+    preferredTypes: ["album"]
   },
   Fusion: {
     searchTerms: ["jazz fusion", "jazz funk", "electric jazz"],
@@ -110,7 +176,7 @@ export const vibeProfiles: Record<
       [1970, 1979],
       [2000, 2035]
     ],
-    preferredTypes: ["album", "track"]
+    preferredTypes: ["album"]
   },
   "Late Night": {
     searchTerms: ["modal jazz", "spiritual jazz", "night jazz"],
@@ -119,7 +185,7 @@ export const vibeProfiles: Record<
       [1950, 1969],
       [1990, 2035]
     ],
-    preferredTypes: ["album", "track"]
+    preferredTypes: ["album"]
   },
   Focus: {
     searchTerms: ["cool jazz", "piano jazz", "contemporary jazz"],
@@ -128,7 +194,7 @@ export const vibeProfiles: Record<
       [1950, 1969],
       [1990, 2035]
     ],
-    preferredTypes: ["track", "album"]
+    preferredTypes: ["album"]
   }
 };
 
@@ -180,11 +246,106 @@ export function buildReason(artistName: string, origin: RecommendationOrigin, vi
   return `從你最近播過的 ${artistName} 出發，這首會把熟悉感再往前推一點。`;
 }
 
+export function buildAlbumRecommendationReason(params: {
+  albumId: string;
+  albumTitle: string;
+  albumArtist: string;
+  albumYear: number;
+  subgenre: string;
+  activeVibe: Vibe;
+  tasteProfile: ListenerTasteProfile;
+  sourceArtistName: string;
+  origin: RecommendationOrigin;
+  sourceTrackTitle?: string;
+  sourceAlbumTitle?: string;
+}) {
+  const evidence: string[] = [];
+  const support: string[] = [];
+  const favoriteDecade = describeDecade(params.tasteProfile.favoriteDecadeStart);
+  const topArtists = new Set(params.tasteProfile.topArtistNames.map(normalizeText));
+  const savedArtists = new Set(params.tasteProfile.savedArtistNames.map(normalizeText));
+  const recentArtists = new Set(params.tasteProfile.recentArtistNames.map(normalizeText));
+  const albumArtistKey = normalizeText(params.albumArtist);
+  const sourceArtistKey = normalizeText(params.sourceArtistName);
+
+  if (topArtists.has(albumArtistKey) || topArtists.has(sourceArtistKey)) {
+    evidence.push(`你最近明顯常回到 ${params.sourceArtistName}，這張把那條線拉成更完整的一次聆聽。`);
+  }
+
+  if (savedArtists.has(albumArtistKey)) {
+    evidence.push(`你收藏過 ${params.albumArtist} 相關的內容，回到這張專輯本身會比單點其中一首更對味。`);
+  }
+
+  if (recentArtists.has(albumArtistKey) && params.sourceTrackTitle) {
+    evidence.push(`你最近播過〈${params.sourceTrackTitle}〉，回到它所在的整張專輯，情緒會更連貫。`);
+  } else if (recentArtists.has(albumArtistKey)) {
+    evidence.push(`你最近剛聽過 ${params.albumArtist}，這張接起來很自然。`);
+  }
+
+  if (
+    params.sourceAlbumTitle &&
+    normalizeText(params.sourceAlbumTitle) !== normalizeText(params.albumTitle)
+  ) {
+    evidence.push(`你最近常聽的《${params.sourceAlbumTitle}》如果想再往外延伸，這張會是很順的一步。`);
+  }
+
+  if (params.origin === "search") {
+    evidence.push(`沿著 ${params.sourceArtistName} 這條線往外走時，《${params.albumTitle}》會比只停在單曲更能看出完整樣子。`);
+  }
+
+  if (params.albumYear > 0) {
+    evidence.push(`《${params.albumTitle}》身上的 ${params.albumYear} 年代感，和你最近偏好的聲響區間很接近。`);
+  }
+
+  if (params.tasteProfile.favoriteGenres.some((genre) => normalizeText(genre).includes(normalizeText(params.subgenre)))) {
+    support.push(`你的常聽裡一直有 ${params.subgenre} 這種質地，這張很容易接上。`);
+  } else {
+    support.push(`它的 ${params.subgenre.toLowerCase()} 氣質很完整，適合整張放完。`);
+  }
+
+  if (favoriteDecade) {
+    support.push(`你最近常聽的年代感多半落在 ${favoriteDecade}，這張也在那個聲響區間裡。`);
+  }
+
+  if (params.activeVibe === "Late Night") {
+    support.push("夜裡把整張放完，層次會比停在單曲更耐聽。");
+  }
+
+  if (params.activeVibe === "Focus") {
+    support.push("它的推進感收得很整齊，適合陪一段比較長的專注。");
+  }
+
+  if (params.activeVibe === "Fusion") {
+    support.push("節奏和電氣感是成套成立的，整張聽會更過癮。");
+  }
+
+  if (params.activeVibe === "Exploratory") {
+    support.push("這張的轉折和留白都夠，從頭聽到尾才會真的打開。");
+  }
+
+  if (params.activeVibe === "Classic") {
+    support.push("它的進入門檻很低，但細節經得起一整張慢慢聽。");
+  }
+
+  const candidates = [...evidence, ...support];
+  const primaryPool = evidence.length > 0 ? evidence : support;
+  const primary =
+    primaryPool[hashValue(params.albumId) % Math.max(primaryPool.length, 1)] ??
+    `這張和你最近的聆聽方向很貼近，值得直接從第一首開始。`;
+  const secondaryPool = candidates.filter((sentence) => sentence !== primary);
+  const secondary =
+    secondaryPool[hashValue(params.albumId) % Math.max(secondaryPool.length, 1)] ??
+    "如果今天想少選一點，直接把整張交給它就好。";
+
+  return `${primary}${secondary}`;
+}
+
 export function buildTrackPick(
   track: SpotifyTrackEntity,
   sourceArtist: SpotifyArtistEntity,
   fallbackVibe: Vibe,
-  origin: RecommendationOrigin
+  origin: RecommendationOrigin,
+  reasonOverride?: string
 ): JazzPick {
   const releaseYear = Number(track.album.release_date?.slice(0, 4) ?? new Date().getFullYear());
   const { subgenre, vibeTags } = inferVibes(sourceArtist.genres ?? [], fallbackVibe);
@@ -196,7 +357,7 @@ export function buildTrackPick(
     type: "track",
     subgenre,
     vibeTags,
-    recommendationReason: buildReason(sourceArtist.name, origin, fallbackVibe),
+    recommendationReason: reasonOverride ?? buildReason(sourceArtist.name, origin, fallbackVibe),
     imageUrl: track.album.images?.[0]?.url ?? buildSpotifySearchUrl({
       title: track.name,
       artist: track.artists[0]?.name ?? sourceArtist.name,
@@ -216,7 +377,8 @@ export function buildAlbumPick(
   album: SpotifyAlbumEntity,
   sourceArtist: SpotifyArtistEntity,
   fallbackVibe: Vibe,
-  origin: RecommendationOrigin
+  origin: RecommendationOrigin,
+  reasonOverride?: string
 ): JazzPick {
   const releaseYear = Number(album.release_date?.slice(0, 4) ?? new Date().getFullYear());
   const { subgenre, vibeTags } = inferVibes(sourceArtist.genres ?? [], fallbackVibe);
@@ -229,7 +391,7 @@ export function buildAlbumPick(
     type: "album",
     subgenre,
     vibeTags,
-    recommendationReason: buildReason(sourceArtist.name, origin, fallbackVibe),
+    recommendationReason: reasonOverride ?? buildReason(sourceArtist.name, origin, fallbackVibe),
     imageUrl: album.images?.[0]?.url ?? buildSpotifySearchUrl({
       title: album.name,
       artist: albumArtist,

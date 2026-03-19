@@ -5,6 +5,7 @@ import {
   fetchItunesArtwork,
   hydratePublicArtworkForPick
 } from "@/lib/cover-art";
+import { JazzPick } from "@/types/jazz";
 
 function jsonResponse(body: unknown, ok = true) {
   return {
@@ -13,13 +14,31 @@ function jsonResponse(body: unknown, ok = true) {
   } as Response;
 }
 
+const syntheticTrackPick: JazzPick = {
+  id: "synthetic-track",
+  title: "Take Five",
+  artist: "The Dave Brubeck Quartet",
+  type: "track",
+  subgenre: "Cool Jazz",
+  vibeTags: ["Classic", "Focus"],
+  recommendationReason: "synthetic",
+  imageUrl: "data:image/svg+xml,placeholder",
+  spotifyUrl: "https://open.spotify.com/search/track%3ATake%20Five",
+  shareUrl: "https://open.spotify.com/search/track%3ATake%20Five",
+  artworkSourceUrl: "https://open.spotify.com/track/1YQWosTIljIvxAgHWTp7KP",
+  year: 1959,
+  durationLabel: "5 min",
+  accentColor: "#8aa190",
+  source: "curated"
+};
+
 describe("public artwork hydration", () => {
   it("builds catalog-specific iTunes search urls for albums and tracks", () => {
     const albumPick = jazzPicks.find((pick) => pick.type === "album");
-    const trackPick = jazzPicks.find((pick) => pick.type === "track");
+    const trackPick = syntheticTrackPick;
 
-    if (!albumPick || !trackPick) {
-      throw new Error("Expected both album and track picks.");
+    if (!albumPick) {
+      throw new Error("Expected at least one album pick.");
     }
 
     expect(buildItunesArtworkSearchUrl(albumPick)).toContain("entity=album");
@@ -46,10 +65,7 @@ describe("public artwork hydration", () => {
   });
 
   it("falls back to iTunes artwork when Spotify oEmbed cannot resolve the cover", async () => {
-    const trackPick = jazzPicks.find((pick) => pick.type === "track");
-    if (!trackPick) {
-      throw new Error("Expected at least one curated track.");
-    }
+    const trackPick = syntheticTrackPick;
 
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);

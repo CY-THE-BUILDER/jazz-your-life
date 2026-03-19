@@ -3,6 +3,7 @@ import {
   clearOAuthCookies,
   clearSpotifyCookies,
   exchangeCodeForToken,
+  getSpotifyRedirectUri,
   isSpotifyConfigured,
   persistSpotifyTokens,
   readOAuthCookies
@@ -17,7 +18,7 @@ export async function GET(request: NextRequest) {
   const state = searchParams.get("state");
 
   const appUrl = request.nextUrl.origin;
-  const redirectUri = new URL("/api/spotify/callback", appUrl).toString();
+  const redirectUri = getSpotifyRedirectUri(appUrl);
 
   if (!isSpotifyConfigured()) {
     return NextResponse.redirect(new URL("/?spotify=misconfigured", appUrl));

@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   buildAlbumPick,
+  buildAlbumRecommendationReason,
   buildSpotifySearchUrl,
+  buildTasteProfile,
   buildTrackPick,
   inferVibes,
   scorePickForVibe
@@ -109,5 +111,49 @@ describe("spotify recommendation mapping", () => {
     expect(scorePickForVibe(fusionPick, "Fusion")).toBeGreaterThan(
       scorePickForVibe(fusionPick, "Classic")
     );
+  });
+
+  it("can derive an album recommendation reason from listening taste instead of repeating the same template", () => {
+    const tasteProfile = buildTasteProfile(
+      [
+        {
+          id: "artist-2",
+          name: "Herbie Hancock",
+          genres: ["jazz fusion", "jazz funk"]
+        }
+      ],
+      [
+        {
+          id: "track-1",
+          name: "Chameleon",
+          duration_ms: 900000,
+          artists: [{ id: "artist-2", name: "Herbie Hancock" }],
+          album: {
+            id: "album-2",
+            name: "Head Hunters",
+            release_date: "1973-10-26"
+          }
+        }
+      ],
+      [],
+      []
+    );
+
+    const reason = buildAlbumRecommendationReason({
+      albumId: "album-3",
+      albumTitle: "Thrust",
+      albumArtist: "Herbie Hancock",
+      albumYear: 1974,
+      subgenre: "Fusion",
+      activeVibe: "Fusion",
+      tasteProfile,
+      sourceArtistName: "Herbie Hancock",
+      origin: "search",
+      sourceAlbumTitle: "Head Hunters"
+    });
+
+    expect(reason).toContain("Herbie Hancock");
+    expect(reason).toContain("Head Hunters");
+    expect(reason).not.toContain("這首");
   });
 });

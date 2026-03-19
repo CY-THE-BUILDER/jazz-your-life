@@ -1,7 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { getSpotifyActionUrl } from "@/lib/spotify-actions";
+import type { MouseEvent } from "react";
+import { getSpotifyActionUrl, getSpotifyNavigationTarget } from "@/lib/spotify-actions";
 import { JazzPick } from "@/types/jazz";
 
 type SavedPicksProps = {
@@ -11,6 +12,19 @@ type SavedPicksProps = {
 };
 
 export function SavedPicks({ picks, onToggleSave, onShare }: SavedPicksProps) {
+  function handleOpenSpotify(
+    event: MouseEvent<HTMLAnchorElement>,
+    pick: JazzPick
+  ) {
+    const actionUrl = getSpotifyActionUrl(pick, navigator.userAgent);
+    const target = getSpotifyNavigationTarget(navigator.userAgent);
+
+    if (target === "_self") {
+      event.preventDefault();
+      window.location.assign(actionUrl);
+    }
+  }
+
   if (picks.length === 0) {
     return (
       <div className="rounded-[28px] border border-dashed border-white/10 bg-white/[0.04] p-8 text-center text-sm leading-7 text-mist">
@@ -50,6 +64,7 @@ export function SavedPicks({ picks, onToggleSave, onShare }: SavedPicksProps) {
                 href={getSpotifyActionUrl(pick)}
                 target="_blank"
                 rel="noreferrer"
+                onClick={(event) => handleOpenSpotify(event, pick)}
                 className="rounded-full bg-olive-50 px-3 py-1.5 text-xs font-medium text-ink"
               >
                 前往 Spotify
