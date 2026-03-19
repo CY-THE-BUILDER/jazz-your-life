@@ -398,75 +398,75 @@ export function buildAlbumRecommendationReason(params: {
 
   const relationshipLines: Record<RecommendationContext["relationship"], string[]> = {
     familiar: [
-      `既然最近一直回到 ${params.sourceArtistName}，今天不妨讓《${params.albumTitle}》把那條線聽完整。`,
-      `你耳朵這陣子明顯還留在 ${params.sourceArtistName}，這張剛好把熟悉感收成一個更完整的輪廓。`,
-      `如果最近常被 ${params.sourceArtistName} 留住，接著聽《${params.albumTitle}》會很順。`
+      `既然最近一直回到 ${params.sourceArtistName}，今天就讓《${params.albumTitle}》把那股聲音真正攤開。`,
+      `你耳朵還停在 ${params.sourceArtistName} 的餘光裡，《${params.albumTitle}》剛好把那道線索接住。`,
+      `如果最近常被 ${params.sourceArtistName} 留下來，《${params.albumTitle}》會把那份熟悉聽得更深。`
     ],
     saved: [
-      `既然你曾經把 ${params.albumArtist} 留下來，今天回到《${params.albumTitle}》會比停在片段更有味道。`,
-      `這張不是用來挑單首的專輯，既然你留過 ${params.albumArtist}，就讓它從頭慢慢展開。`,
-      `你先前替 ${params.albumArtist} 留過位置，今天把《${params.albumTitle}》整張放完正合適。`
+      `既然你曾經替 ${params.albumArtist} 留過位置，今天回到《${params.albumTitle}》會比停在片段更對。`,
+      `《${params.albumTitle}》不是靠單一段落成立的專輯，既然你留過 ${params.albumArtist}，就讓它完整走一遍。`,
+      `你先前把 ${params.albumArtist} 收進來過，現在把《${params.albumTitle}》整張打開，味道會更完整。`
     ],
     recent: [
-      `耳朵還記得 ${params.albumArtist} 的質地時，《${params.albumTitle}》接上去會很自然。`,
-      `你最近才碰過 ${params.albumArtist}，這張幾乎不用重新暖身就能進去。`,
-      `趁耳朵還留著 ${params.albumArtist} 的餘韻，把《${params.albumTitle}》接進來會剛剛好。`
+      `耳朵還記得 ${params.albumArtist} 的質地時，《${params.albumTitle}》接上去幾乎不需要多想。`,
+      `你最近才碰過 ${params.albumArtist}，現在回到《${params.albumTitle}》，氣氛會自己續上。`,
+      `趁 ${params.albumArtist} 的餘韻還在，把《${params.albumTitle}》接進來正是時候。`
     ],
     adjacent: [
-      `沿著 ${params.sourceArtistName} 這條線再往外走半步，《${params.albumTitle}》會把視野打開，但不會一下子拉得太遠。`,
-      `如果想從 ${params.sourceArtistName} 再多聽出一點轉折，《${params.albumTitle}》會是一個很穩的延伸。`,
-      `從 ${params.sourceArtistName} 出發再偏一點角度，剛好會走到《${params.albumTitle}》最迷人的位置。`
+      `沿著 ${params.sourceArtistName} 這條線再往外走半步，《${params.albumTitle}》會把視野打開，卻不至於失手。`,
+      `如果想從 ${params.sourceArtistName} 再聽出一點岔路，《${params.albumTitle}》會是一個很準的轉身。`,
+      `從 ${params.sourceArtistName} 出發，把角度稍微偏一點，剛好會走到《${params.albumTitle}》最有意思的地方。`
     ],
     fresh: [
-      `如果今天想換一張新的起點，《${params.albumTitle}》會是很穩的一步。`,
-      `《${params.albumTitle}》和你這一輪的聽感貼得很近，今天從這裡開始剛好。`,
-      "這張不需要太多前情提要，今天把第一段時間交給它就很好。"
+      `如果今天想換一張新的起點，《${params.albumTitle}》會是很好的第一步。`,
+      `《${params.albumTitle}》不需要太多前情提要，今天從這裡開始剛好。`,
+      "有些專輯只要在對的時候放下去，整天的速度就會自己調好。"
     ]
   };
 
   const sonicLines: Record<RecommendationContext["sonic"], string[]> = {
     shadowy: [
-      "它的陰影和留白都夠，夜裡聽尤其見長。",
-      "把燈稍微壓低一點再放這張，層次會一層一層慢慢浮上來。",
-      "它不是靠聲量取勝，而是把夜色慢慢往房間裡帶。"
+      "它的留白和陰影都收得深，越晚越顯得有層次。",
+      "燈光稍微壓低一點再放這張，細節會像酒杯邊緣的反光那樣慢慢浮上來。",
+      "它不靠聲量取勝，而是把夜色一寸一寸帶進來。"
     ],
     electric: [
-      "節奏和電氣感都帶著光澤，整張的推進很俐落。",
-      "它不是只靠幾個亮點撐場，而是從頭到尾都帶著一股帶電的推力。",
-      "低頻和切分都抓得很準，整張聽下去會有一種往前滑行的快感。"
+      "節奏和電氣感都帶著亮面，整張推進得乾淨又俐落。",
+      "它不是靠幾個瞬間撐場，而是從頭到尾都帶著一股帶電的推力。",
+      "低頻抓得穩，切分也漂亮，聽起來像一輛夜車順著路面往前滑。"
     ],
     open: [
-      "它的空間感很寬，從第一首進去就能慢慢把耳朵打開。",
-      "留白和呼吸都收得好，聽起來會比你記得的更從容。",
-      "分寸拿得漂亮，所以整張即使熟也不會顯得老。"
+      "它的空間感很寬，第一首一落下，耳朵就會慢慢鬆開。",
+      "呼吸和留白都拿得準，所以整張聽起來比記憶裡更從容。",
+      "分寸漂亮到幾乎像老牌調酒師下手，不多一滴，也不少一滴。"
     ],
     steady: [
-      "線條乾淨，推進穩，不會把注意力硬生生扯走。",
-      "它的節奏收得很整齊，剛好能陪一段不被打斷的專注。",
-      "它會把空間整理好，讓注意力自然回到眼前。"
+      "線條乾淨，推進穩，注意力會自己回到手上的事。",
+      "它的節奏收得整齊，不搶戲，卻始終把空間撐住。",
+      "像一張把桌面整理乾淨的專輯，放下去之後，心緒會跟著歸位。"
     ],
     restless: [
-      "轉折不少，但並不故作艱深，越往後聽越有層次。",
-      "它不急著把答案一次說滿，正好留了一點探索的空間。",
-      "邊界始終是開著的，所以越聽越像被帶去另一個房間。"
+      "轉折不少，卻不賣弄艱深，越往後聽越像房間裡又打開一扇門。",
+      "它不急著把答案一次說滿，所以聽的人反而願意走得更深。",
+      "邊界始終開著，像在 Blue Note 末場之後還有人繼續把句子往外吹。"
     ]
   };
 
   const eraLines: Record<RecommendationContext["era"], string[]> = {
     timeless: [
-      "它幾乎不需要背景交代，放下去就會成立。",
-      "那種經得起反覆回來的重量，在這張裡很明顯。",
-      "有些專輯只要一響起來，整個房間就會自己安定下來。"
+      "它幾乎不需要背景交代，一響起來就站得住。",
+      "那種值得反覆回來的重量，在這張裡很明顯。",
+      "有些專輯只要一落針，整個房間就會自己安靜下來。"
     ],
     vintage: [
-      "帶點年代感的溫度，會讓整張更耐聽。",
-      "它身上的舊時代質地不厚重，反而把輪廓收得更乾淨。",
-      "那種略帶霧面的年代感，反而讓整張更有呼吸。"
+      "那層帶著年代感的溫度，反而讓整張更耐聽。",
+      "它有舊唱片封面那種微微褪色的質地，輪廓卻依然清楚。",
+      "略帶霧面的年代感在這裡不是包袱，反而像一盞把氣氛照柔的燈。"
     ],
     modern: [
-      "聲響是新的，但收法很克制，不會把情緒說得太滿。",
-      "它的現代感不是炫技，而是把線條整理得更俐落。",
-      "新一點的聲響骨架在這裡收得很好，所以耐聽，不只耐看。"
+      "聲響是新的，收法卻很克制，不會把情緒一次說滿。",
+      "它的現代感不靠炫技，而是把線條理得更俐落。",
+      "像近年的好錄音一樣，空間、低頻和光澤都在，卻沒有一絲多餘。"
     ]
   };
 
@@ -475,7 +475,7 @@ export function buildAlbumRecommendationReason(params: {
 
   if (recentArtists.has(albumArtistKey) && params.sourceTrackTitle) {
     relationshipPool.push(
-      `你最近播過〈${params.sourceTrackTitle}〉，回到《${params.albumTitle}》整張去聽，情緒會連得更完整。`
+      `你最近播過〈${params.sourceTrackTitle}〉，現在回到《${params.albumTitle}》整張去聽，情緒會接得更完整。`
     );
   }
 
@@ -484,24 +484,24 @@ export function buildAlbumRecommendationReason(params: {
     normalizeText(params.sourceAlbumTitle) !== normalizeText(params.albumTitle)
   ) {
     relationshipPool.push(
-      `如果《${params.sourceAlbumTitle}》已經在你耳邊待了一陣子，接著讓《${params.albumTitle}》把景深再推遠一點。`
+      `如果《${params.sourceAlbumTitle}》已經在你耳邊待了一陣子，接著讓《${params.albumTitle}》把景深再往外推一層。`
     );
   }
 
   if (params.activeVibe === "Classic") {
-    supportPool.push("它有那種不需要試探太久的穩定感，一放下去就能把今天的起點定住。");
+    supportPool.push("它有那種老名盤才有的穩定感，一放下去，今天的起點就定了。");
   }
 
   if (params.activeVibe === "Exploratory") {
-    supportPool.push("它不是為了炫耀陌生而陌生，而是把熟悉的語彙慢慢推到更遠的地方。");
+    supportPool.push("它不是為了炫耀陌生而陌生，而是把熟悉的語彙推向更遠、更亮的地方。");
   }
 
   if (params.activeVibe === "Fusion") {
-    supportPool.push("如果今天想把重心放在律動和推進，這張會比想像中更耐放。");
+    supportPool.push("如果今天想把重心放在律動、推進和一點電氣火花，這張會耐放得多。");
   }
 
   if (params.activeVibe === "Late Night") {
-    supportPool.push("它把情緒收得低，但細節沒有退，正適合夜裡慢慢聽開。");
+    supportPool.push("它把情緒壓得很低，細節卻沒有退，正適合夜裡慢慢聽開。");
   }
 
   if (params.activeVibe === "Focus") {
