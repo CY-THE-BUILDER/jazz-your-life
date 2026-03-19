@@ -12,10 +12,12 @@ import {
   buildTasteProfile,
   buildTrackPick,
   dedupePicks,
+  diversifyPicks,
   isJazzAdjacentArtist,
   ListenerTasteProfile,
   parseVibe,
   scorePickForVibe,
+  scoreArtistForVibe,
   SpotifyAlbumEntity,
   SpotifyArtistEntity,
   SpotifyTrackEntity,
@@ -52,6 +54,46 @@ function matchesCuratedJazzArtist(name: string) {
 
 function isRecommendableAlbum(album: SpotifyAlbumEntity) {
   return album.album_type !== "single";
+}
+
+function albumMatchesActiveFlavor(
+  pick: JazzPick,
+  activeVibe: JazzPick["vibeTags"][number]
+) {
+  const profile = vibeProfiles[activeVibe];
+  const decadeMatch = profile.preferredDecades.some(
+    ([start, end]) => pick.year >= start && pick.year <= end
+  );
+
+  return (
+    pick.vibeTags.includes(activeVibe) ||
+    profile.preferredSubgenres.includes(pick.subgenre) ||
+    decadeMatch
+  );
+}
+
+function selectSeedArtistsForVibe(
+  activeVibe: JazzPick["vibeTags"][number],
+  topArtists: SpotifyArtistEntity[]
+) {
+  const profile = vibeProfiles[activeVibe];
+  const rankedTopArtists = [...topArtists]
+    .filter(isJazzAdjacentArtist)
+    .sort((left, right) => scoreArtistForVibe(right, activeVibe) - scoreArtistForVibe(left, activeVibe))
+    .filter((artist, index, list) => list.findIndex((entry) => entry.id === artist.id) === index);
+
+  const anchorArtists = profile.anchorArtists
+    .filter(
+      (artistName) =>
+        !rankedTopArtists.some((artist) => artist.name.toLowerCase() === artistName.toLowerCase())
+    )
+    .map((artistName) => ({
+      id: `anchor-${activeVibe}-${artistName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
+      name: artistName,
+      genres: profile.seedGenreTerms
+    }));
+
+  return [...rankedTopArtists.slice(0, 4), ...anchorArtists].slice(0, 6);
 }
 
 async function getTopArtists(accessToken: string) {
@@ -203,7 +245,7 @@ async function buildSearchDrivenPicks(
   );
 
   return dedupePicks(searchResults.flat())
-    .filter((pick) => scorePickForVibe(pick, activeVibe) > 0)
+    .filter((pick) => albumMatchesActiveFlavor(pick, activeVibe))
     .sort((left, right) => scorePickForVibe(right, activeVibe) - scorePickForVibe(left, activeVibe));
 }
 
@@ -260,7 +302,7 @@ function buildSignalDrivenPicks(
       .filter((entry) => entry.allowed)
       .map((entry) => entry.pick)
   )
-    .filter((pick) => scorePickForVibe(pick, activeVibe) > 0)
+    .filter((pick) => albumMatchesActiveFlavor(pick, activeVibe))
     .sort((left, right) => scorePickForVibe(right, activeVibe) - scorePickForVibe(left, activeVibe));
 }
 
@@ -287,7 +329,7 @@ export async function GET(request: NextRequest) {
     ]);
     const tasteProfile = buildTasteProfile(topArtists, topTracks, recentlyPlayed, savedTracks);
 
-    const seedArtists = topArtists.filter(
+    const seedArtists = selectSeedArtistsForVibe(vibe, topArtists).filter(
       (artist) => isJazzAdjacentArtist(artist) || matchesCuratedJazzArtist(artist.name)
     );
 
@@ -312,9 +354,10 @@ export async function GET(request: NextRequest) {
       savedTracks,
       tasteProfile
     );
-    const personalizedPicks = dedupePicks([...searchedPicks, ...signalPicks])
+    const personalizedPicks = diversifyPicks(
+      dedupePicks([...searchedPicks, ...signalPicks])
       .sort((left, right) => scorePickForVibe(right, vibe) - scorePickForVibe(left, vibe))
-      .slice(0, 5);
+      , vibe, 5);
 
     if (personalizedPicks.length >= 3) {
       const seedNames = Array.from(
@@ -327,8 +370,8 @@ export async function GET(request: NextRequest) {
           headline: "順著你的聆聽習慣往下走",
           note:
             seedNames.length > 0
-              ? `從你最近常聽的 ${seedNames.join("、")} 出發，替你接出今天這一輪。`
-              : "這一輪會順著你最近的播放與收藏，把更貼近此刻的選擇先收好。",
+              ? `順著你最近耳朵停留的方向，把 ${seedNames.join("、")} 附近的風景重新收成這一輪。`
+              : "這一輪順著你最近的聽感往前推，先替你留住幾張更貼近此刻的專輯。",
           picks: personalizedPicks
         },
         {

@@ -40,6 +40,12 @@ export type ListenerTasteProfile = {
   favoriteDecadeStart: number | null;
 };
 
+type RecommendationContext = {
+  relationship: "familiar" | "saved" | "recent" | "adjacent" | "fresh";
+  sonic: "shadowy" | "electric" | "open" | "steady" | "restless";
+  era: "timeless" | "vintage" | "modern";
+};
+
 const vibeValues: Vibe[] = ["Classic", "Exploratory", "Fusion", "Late Night", "Focus"];
 
 const genreToVibes: Array<{ match: RegExp; vibes: Vibe[]; subgenre: string }> = [
@@ -149,6 +155,8 @@ export const vibeProfiles: Record<
     preferredSubgenres: string[];
     preferredDecades: Array<[number, number]>;
     preferredTypes: Array<"track" | "album">;
+    seedGenreTerms: string[];
+    anchorArtists: string[];
   }
 > = {
   Classic: {
@@ -158,7 +166,9 @@ export const vibeProfiles: Record<
       [1950, 1959],
       [1960, 1969]
     ],
-    preferredTypes: ["album"]
+    preferredTypes: ["album"],
+    seedGenreTerms: ["hard bop", "cool jazz", "modal jazz", "jazz"],
+    anchorArtists: ["Miles Davis", "Bill Evans", "Art Blakey", "The Dave Brubeck Quartet"]
   },
   Exploratory: {
     searchTerms: ["spiritual jazz", "post-bop", "contemporary jazz"],
@@ -167,7 +177,9 @@ export const vibeProfiles: Record<
       [1960, 1969],
       [2000, 2035]
     ],
-    preferredTypes: ["album"]
+    preferredTypes: ["album"],
+    seedGenreTerms: ["spiritual jazz", "post-bop", "modal jazz", "contemporary jazz"],
+    anchorArtists: ["Wayne Shorter", "Kamasi Washington", "Nubya Garcia", "Emma-Jean Thackray"]
   },
   Fusion: {
     searchTerms: ["jazz fusion", "jazz funk", "electric jazz"],
@@ -176,7 +188,9 @@ export const vibeProfiles: Record<
       [1970, 1979],
       [2000, 2035]
     ],
-    preferredTypes: ["album"]
+    preferredTypes: ["album"],
+    seedGenreTerms: ["fusion", "jazz funk", "electric jazz", "nu jazz", "broken beat"],
+    anchorArtists: ["Herbie Hancock", "Weather Report", "Yussef Kamaal", "Robert Glasper"]
   },
   "Late Night": {
     searchTerms: ["modal jazz", "spiritual jazz", "night jazz"],
@@ -185,7 +199,9 @@ export const vibeProfiles: Record<
       [1950, 1969],
       [1990, 2035]
     ],
-    preferredTypes: ["album"]
+    preferredTypes: ["album"],
+    seedGenreTerms: ["modal jazz", "spiritual jazz", "cool jazz", "jazz"],
+    anchorArtists: ["Miles Davis", "Wayne Shorter", "Bill Evans", "Nubya Garcia"]
   },
   Focus: {
     searchTerms: ["cool jazz", "piano jazz", "contemporary jazz"],
@@ -194,7 +210,9 @@ export const vibeProfiles: Record<
       [1950, 1969],
       [1990, 2035]
     ],
-    preferredTypes: ["album"]
+    preferredTypes: ["album"],
+    seedGenreTerms: ["cool jazz", "piano jazz", "contemporary jazz", "jazz trio"],
+    anchorArtists: ["Bill Evans", "Pat Metheny", "The Dave Brubeck Quartet", "Yussef Kamaal"]
   }
 };
 
@@ -219,6 +237,60 @@ export function scorePickForVibe(pick: JazzPick, vibe: Vibe) {
   }
 
   return score;
+}
+
+export function scoreArtistForVibe(artist: SpotifyArtistEntity, vibe: Vibe) {
+  const haystack = normalizeText([artist.name, ...(artist.genres ?? [])].join(" "));
+  const profile = vibeProfiles[vibe];
+  let score = 0;
+
+  if (profile.seedGenreTerms.some((term) => haystack.includes(normalizeText(term)))) {
+    score += 6;
+  }
+
+  if (profile.anchorArtists.some((name) => normalizeText(name) === normalizeText(artist.name))) {
+    score += 5;
+  }
+
+  if (isJazzAdjacentArtist(artist)) {
+    score += 3;
+  }
+
+  return score;
+}
+
+export function diversifyPicks(picks: JazzPick[], vibe: Vibe, limit = 5) {
+  const sorted = [...picks].sort(
+    (left, right) => scorePickForVibe(right, vibe) - scorePickForVibe(left, vibe)
+  );
+  const selected: JazzPick[] = [];
+  const seenArtists = new Set<string>();
+
+  for (const pick of sorted) {
+    const key = normalizeText(pick.artist);
+    if (seenArtists.has(key)) {
+      continue;
+    }
+
+    selected.push(pick);
+    seenArtists.add(key);
+    if (selected.length === limit) {
+      return selected;
+    }
+  }
+
+  for (const pick of sorted) {
+    if (selected.some((entry) => entry.id === pick.id)) {
+      continue;
+    }
+
+    selected.push(pick);
+    if (selected.length === limit) {
+      break;
+    }
+  }
+
+  return selected;
 }
 
 export function isJazzAdjacentArtist(artist: SpotifyArtistEntity) {
@@ -267,19 +339,105 @@ export function buildAlbumRecommendationReason(params: {
   const recentArtists = new Set(params.tasteProfile.recentArtistNames.map(normalizeText));
   const albumArtistKey = normalizeText(params.albumArtist);
   const sourceArtistKey = normalizeText(params.sourceArtistName);
+  const context: RecommendationContext = {
+    relationship:
+      topArtists.has(albumArtistKey) || topArtists.has(sourceArtistKey)
+        ? "familiar"
+        : savedArtists.has(albumArtistKey)
+          ? "saved"
+          : recentArtists.has(albumArtistKey)
+            ? "recent"
+            : params.origin === "search"
+              ? "adjacent"
+              : "fresh",
+    sonic:
+      params.activeVibe === "Late Night"
+        ? "shadowy"
+        : params.activeVibe === "Fusion"
+          ? "electric"
+          : params.activeVibe === "Focus"
+            ? "steady"
+            : params.activeVibe === "Exploratory"
+              ? "restless"
+              : "open",
+    era: params.albumYear >= 1990 ? "modern" : params.albumYear >= 1970 ? "vintage" : "timeless"
+  };
+
+  const relationshipLines: Record<RecommendationContext["relationship"], string[]> = {
+    familiar: [
+      `你最近常回到 ${params.sourceArtistName}，這張會把那股熟悉感收得更完整。`,
+      `如果最近耳朵一直往 ${params.sourceArtistName} 靠，從《${params.albumTitle}》接下去會很順。`
+    ],
+    saved: [
+      `既然你留過 ${params.albumArtist} 的聲音，回到《${params.albumTitle}》會比停在片段更對味。`,
+      `你先前收下的那條線，在《${params.albumTitle}》裡會長得更完整。`
+    ],
+    recent: [
+      `你最近剛碰過 ${params.albumArtist}，這張接上去幾乎不需要重新進入狀態。`,
+      `耳朵還停在 ${params.albumArtist} 的質地上時，聽《${params.albumTitle}》會很自然。`
+    ],
+    adjacent: [
+      `沿著 ${params.sourceArtistName} 這條線往外再走一點，《${params.albumTitle}》剛好把視野打開。`,
+      `如果想從 ${params.sourceArtistName} 再走遠半步，《${params.albumTitle}》會是一個很穩的延伸。`
+    ],
+    fresh: [
+      `《${params.albumTitle}》和你這一輪的聆聽方向貼得很近，今天從這裡開始剛好。`,
+      `如果今天想換一張新的起點，《${params.albumTitle}》會是很穩的一步。`
+    ]
+  };
+
+  const sonicLines: Record<RecommendationContext["sonic"], string[]> = {
+    shadowy: [
+      "夜裡把它整張放完，光線和層次會慢慢沉下來。",
+      "它的陰影和留白都夠，適合夜裡不急著往前趕的時候。"
+    ],
+    electric: [
+      "節奏和電氣感不是點到為止，而是整張都成立。",
+      "它的推力來得乾淨，從頭放到尾會比挑單段更過癮。"
+    ],
+    open: [
+      "它的空間感很寬，從第一首進去就能慢慢把耳朵打開。",
+      "這張留白多、呼吸感也夠，適合把聽感慢慢展開。"
+    ],
+    steady: [
+      "它的推進感收得很穩，適合陪一段不被打斷的專注。",
+      "整張的節奏很整齊，適合讓注意力慢慢落穩。"
+    ],
+    restless: [
+      "它的轉折和留白都夠，從頭聽到尾才會真的打開。",
+      "這張不急著把答案給滿，正好留了一點探索的空間。"
+    ]
+  };
+
+  const eraLines: Record<RecommendationContext["era"], string[]> = {
+    timeless: [
+      "它幾乎不需要背景交代，放下去就會成立。",
+      "那種經得起反覆回來的重量，在這張裡很明顯。"
+    ],
+    vintage: [
+      "那種帶點年代感的溫度，會讓整張更耐聽。",
+      "它身上的舊時代質地不厚重，反而讓輪廓更乾淨。"
+    ],
+    modern: [
+      "聲響是新的，但收法很克制，不會把情緒說得太滿。",
+      "它的現代感不是炫技，而是把線條整理得更俐落。"
+    ]
+  };
 
   if (topArtists.has(albumArtistKey) || topArtists.has(sourceArtistKey)) {
-    leadLines.push(`你最近常回到 ${params.sourceArtistName}，這張剛好把那股熟悉的氣味留得更完整。`);
+    leadLines.push(...relationshipLines.familiar);
   }
 
   if (savedArtists.has(albumArtistKey)) {
-    leadLines.push(`既然你收過 ${params.albumArtist} 的聲音，回到這張專輯本身，會比停在片段更對味。`);
+    leadLines.push(...relationshipLines.saved);
   }
 
   if (recentArtists.has(albumArtistKey) && params.sourceTrackTitle) {
-    leadLines.push(`你最近播過〈${params.sourceTrackTitle}〉，把它放回整張裡聽，情緒會自然連成一條線。`);
+    leadLines.push(
+      `你最近播過〈${params.sourceTrackTitle}〉，把它放回整張裡聽，情緒會自然連成一條線。`
+    );
   } else if (recentArtists.has(albumArtistKey)) {
-    leadLines.push(`你最近剛聽過 ${params.albumArtist}，這張接上去幾乎不需要重新進入狀態。`);
+    leadLines.push(...relationshipLines.recent);
   }
 
   if (
@@ -290,15 +448,15 @@ export function buildAlbumRecommendationReason(params: {
   }
 
   if (params.origin === "search") {
-    leadLines.push(`沿著 ${params.sourceArtistName} 這條線往外再走一點，《${params.albumTitle}》會把輪廓打得更開。`);
+    leadLines.push(...relationshipLines.adjacent);
   }
 
   if (params.albumYear > 0) {
-    supportLines.push(`它身上那種 ${params.albumYear} 年代的聲響密度，和你最近常停留的區間靠得很近。`);
+    supportLines.push(...eraLines[context.era]);
   }
 
   if (params.tasteProfile.favoriteGenres.some((genre) => normalizeText(genre).includes(normalizeText(params.subgenre)))) {
-    supportLines.push(`你最近常聽的質地裡，本來就有 ${params.subgenre} 這一面，所以它落下來很自然。`);
+    supportLines.push(`你最近耳朵熟悉的質地裡，本來就有 ${params.subgenre} 這一面，所以它落下來很自然。`);
   } else {
     supportLines.push(`它的 ${params.subgenre} 氣質收得很完整，適合從頭放到尾。`);
   }
@@ -308,29 +466,29 @@ export function buildAlbumRecommendationReason(params: {
   }
 
   if (params.activeVibe === "Late Night") {
-    supportLines.push("夜裡把整張慢慢放完，層次會比停在一個段落更耐聽。");
+    supportLines.push(...sonicLines.shadowy);
   }
 
   if (params.activeVibe === "Focus") {
-    supportLines.push("它的推進感收得很穩，適合陪一段不被打斷的專注。");
+    supportLines.push(...sonicLines.steady);
   }
 
   if (params.activeVibe === "Fusion") {
-    supportLines.push("節奏和電氣感不是點到為止，而是整張都成立。");
+    supportLines.push(...sonicLines.electric);
   }
 
   if (params.activeVibe === "Exploratory") {
-    supportLines.push("它的轉折和留白都夠，從頭聽到尾才會真的打開。");
+    supportLines.push(...sonicLines.restless);
   }
 
   if (params.activeVibe === "Classic") {
-    supportLines.push("它進入得很輕，但細節經得起一整張慢慢聽。");
+    supportLines.push(...sonicLines.open);
   }
 
   const leadPool =
     leadLines.length > 0
       ? leadLines
-      : [`《${params.albumTitle}》和你最近的聆聽方向貼得很近，今天從這裡開始剛好。`];
+      : relationshipLines.fresh;
   const supportPool =
     supportLines.length > 0
       ? supportLines

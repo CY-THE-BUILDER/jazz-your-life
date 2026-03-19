@@ -5,7 +5,9 @@ import {
   buildSpotifySearchUrl,
   buildTasteProfile,
   buildTrackPick,
+  diversifyPicks,
   inferVibes,
+  scoreArtistForVibe,
   scorePickForVibe
 } from "@/lib/spotify-recommendations";
 
@@ -152,10 +154,79 @@ describe("spotify recommendation mapping", () => {
       sourceAlbumTitle: "Head Hunters"
     });
 
-    expect(reason).toContain("Head Hunters");
-    expect(reason).toContain("Thrust");
+    expect(reason).toContain("Herbie Hancock");
     expect(reason).not.toContain("數據");
     expect(reason).not.toContain("分析");
     expect(reason).not.toContain("觀察");
+    expect(reason).not.toContain("最近常聽的年代感");
+  });
+
+  it("scores artists differently by flavor so seeds can shift with the selected vibe", () => {
+    const fusionArtist = {
+      id: "artist-fusion",
+      name: "Herbie Hancock",
+      genres: ["jazz fusion", "jazz funk"]
+    };
+    const focusArtist = {
+      id: "artist-focus",
+      name: "Bill Evans",
+      genres: ["piano jazz", "cool jazz"]
+    };
+
+    expect(scoreArtistForVibe(fusionArtist, "Fusion")).toBeGreaterThan(
+      scoreArtistForVibe(fusionArtist, "Classic")
+    );
+    expect(scoreArtistForVibe(focusArtist, "Focus")).toBeGreaterThan(
+      scoreArtistForVibe(focusArtist, "Fusion")
+    );
+  });
+
+  it("diversifies picks by artist before filling the rest of the shelf", () => {
+    const picks = [
+      buildAlbumPick(
+        {
+          id: "album-a1",
+          name: "A One",
+          release_date: "1973-01-01",
+          images: [{ url: "https://i.scdn.co/image/a1" }],
+          external_urls: { spotify: "https://open.spotify.com/album/a1" },
+          artists: [{ id: "artist-a", name: "Artist A" }]
+        },
+        { id: "artist-a", name: "Artist A", genres: ["jazz fusion"] },
+        "Fusion",
+        "search"
+      ),
+      buildAlbumPick(
+        {
+          id: "album-a2",
+          name: "A Two",
+          release_date: "1974-01-01",
+          images: [{ url: "https://i.scdn.co/image/a2" }],
+          external_urls: { spotify: "https://open.spotify.com/album/a2" },
+          artists: [{ id: "artist-a", name: "Artist A" }]
+        },
+        { id: "artist-a", name: "Artist A", genres: ["jazz fusion"] },
+        "Fusion",
+        "search"
+      ),
+      buildAlbumPick(
+        {
+          id: "album-b1",
+          name: "B One",
+          release_date: "1975-01-01",
+          images: [{ url: "https://i.scdn.co/image/b1" }],
+          external_urls: { spotify: "https://open.spotify.com/album/b1" },
+          artists: [{ id: "artist-b", name: "Artist B" }]
+        },
+        { id: "artist-b", name: "Artist B", genres: ["jazz fusion"] },
+        "Fusion",
+        "search"
+      )
+    ];
+
+    const diversified = diversifyPicks(picks, "Fusion", 2);
+
+    expect(diversified).toHaveLength(2);
+    expect(new Set(diversified.map((pick) => pick.artist)).size).toBe(2);
   });
 });
