@@ -99,6 +99,43 @@ describe("public artwork hydration", () => {
     expect(buildItunesArtworkSearchUrl(trackPick)).toContain("entity=song");
   });
 
+  it("downgrades invalid exact album links to a stable Spotify search url instead of shipping a dead album page", async () => {
+    const albumPick = {
+      ...jazzPicks[0],
+      spotifyUrl: "https://open.spotify.com/album/not-a-real-album",
+      shareUrl: "https://open.spotify.com/album/not-a-real-album",
+      artworkSourceUrl: "https://open.spotify.com/album/not-a-real-album"
+    };
+
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+
+      if (url.startsWith("https://open.spotify.com/oembed")) {
+        return jsonResponse({}, false);
+      }
+
+      if (url.startsWith("https://itunes.apple.com/search")) {
+        return jsonResponse({
+          results: [
+            {
+              collectionName: albumPick.title,
+              artistName: albumPick.artist,
+              artworkUrl100: "https://is1-ssl.mzstatic.com/image/thumb/Music/100x100bb.jpg"
+            }
+          ]
+        });
+      }
+
+      throw new Error(`Unexpected fetch: ${url}`);
+    });
+
+    const hydrated = await hydratePublicArtworkForPick(albumPick, fetchMock as typeof fetch);
+
+    expect(hydrated.spotifyUrl).toBe("https://open.spotify.com/search/Kind%20of%20Blue%20Miles%20Davis");
+    expect(hydrated.shareUrl).toBe(hydrated.spotifyUrl);
+    expect(hydrated.imageUrl).toBe("https://is1-ssl.mzstatic.com/image/thumb/Music/600x600bb.jpg");
+  });
+
   it("queries the right catalog for every curated recommendation type and returns non-default art", async () => {
     const requestLog: string[] = [];
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {

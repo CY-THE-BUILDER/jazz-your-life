@@ -1,4 +1,5 @@
 import { JazzPick } from "@/types/jazz";
+import { buildSpotifySearchUrl } from "@/lib/spotify-recommendations";
 
 type FetchLike = typeof fetch;
 
@@ -80,6 +81,10 @@ export async function fetchSpotifyOEmbedThumbnail(
   return data.thumbnail_url ?? null;
 }
 
+function isSpotifyAlbumUrl(url: string) {
+  return /open\.spotify\.com\/album\//.test(url);
+}
+
 export function buildItunesArtworkSearchUrl(pick: JazzPick) {
   const term = `${pick.title} ${pick.artist}`;
   const entity = pick.type === "track" ? "song" : "album";
@@ -112,6 +117,19 @@ export async function hydratePublicArtworkForPick(
   pick: JazzPick,
   fetchImpl: FetchLike = fetch
 ) {
+  const exactSpotifyUrl = isSpotifyAlbumUrl(pick.spotifyUrl) ? pick.spotifyUrl : null;
+  const exactThumbnailUrl = exactSpotifyUrl
+    ? await fetchSpotifyOEmbedThumbnail(exactSpotifyUrl, fetchImpl)
+    : null;
+
+  if (exactThumbnailUrl && exactSpotifyUrl) {
+    return {
+      ...pick,
+      imageUrl: exactThumbnailUrl,
+      artworkSourceUrl: exactSpotifyUrl
+    };
+  }
+
   const thumbnailUrl = await fetchSpotifyOEmbedThumbnail(
     pick.artworkSourceUrl ?? pick.spotifyUrl,
     fetchImpl
@@ -126,11 +144,39 @@ export async function hydratePublicArtworkForPick(
 
   const itunesArtworkUrl = await fetchItunesArtwork(pick, fetchImpl);
   if (!itunesArtworkUrl) {
-    return pick;
+    return exactSpotifyUrl
+      ? {
+          ...pick,
+          spotifyUrl: buildSpotifySearchUrl({
+            title: pick.title,
+            artist: pick.artist,
+            type: "album"
+          }),
+          shareUrl: buildSpotifySearchUrl({
+            title: pick.title,
+            artist: pick.artist,
+            type: "album"
+          })
+        }
+      : pick;
   }
 
   return {
     ...pick,
-    imageUrl: itunesArtworkUrl
+    imageUrl: itunesArtworkUrl,
+    ...(exactSpotifyUrl
+      ? {
+          spotifyUrl: buildSpotifySearchUrl({
+            title: pick.title,
+            artist: pick.artist,
+            type: "album"
+          }),
+          shareUrl: buildSpotifySearchUrl({
+            title: pick.title,
+            artist: pick.artist,
+            type: "album"
+          })
+        }
+      : {})
   };
 }
