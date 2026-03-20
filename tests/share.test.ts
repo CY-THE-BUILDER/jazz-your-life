@@ -1,12 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import {
-  buildFacebookShareUrl,
-  buildInstagramLaunchUrl,
-  buildInstagramWebUrl,
   buildPickSharePayload,
-  buildSmsShareUrl,
-  copyShareUrl,
-  isMobileUserAgent
+  buildShareImagePayload,
+  buildShareImageUrl,
+  copyShareText,
+  sharePick
 } from "@/lib/share";
 import { JazzPick } from "@/types/jazz";
 
@@ -36,41 +34,46 @@ describe("share helpers", () => {
     expect(payload.url).toBe("https://open.spotify.com/album/example");
   });
 
-  it("builds a facebook share url with the source link", () => {
-    const url = buildFacebookShareUrl(buildPickSharePayload(pick));
-
-    expect(url).toContain("facebook.com/sharer/sharer.php");
-    expect(url).toContain(encodeURIComponent("https://open.spotify.com/album/example"));
-  });
-
-  it("builds a text share url with copy", () => {
-    const url = buildSmsShareUrl(buildPickSharePayload(pick));
-
-    expect(url.startsWith("sms:?&body=")).toBe(true);
-    expect(url).toContain(encodeURIComponent("Kind of Blue · Miles Davis"));
-  });
-
-  it("exposes instagram launch targets", () => {
-    expect(buildInstagramLaunchUrl()).toBe("instagram://app");
-    expect(buildInstagramWebUrl()).toBe("https://www.instagram.com/");
-  });
-
-  it("detects mobile user agents for direct share redirects", () => {
-    expect(isMobileUserAgent("Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)")).toBe(true);
-    expect(isMobileUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0)")).toBe(false);
-  });
-
-  it("copies only the spotify url for copy-link actions", async () => {
+  it("copies text and link together when native share is unavailable", async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.assign(navigator, {
       clipboard: {
         writeText
-      }
+      },
+      share: undefined
     });
 
-    const result = await copyShareUrl("https://open.spotify.com/album/example");
+    const result = await copyShareText(buildPickSharePayload(pick));
 
     expect(result.status).toBe("copied");
-    expect(writeText).toHaveBeenCalledWith("https://open.spotify.com/album/example");
+    expect(writeText).toHaveBeenCalledWith(
+      "Kind of Blue · Miles Davis\n今天想把《Kind of Blue》留給你。Miles Davis，把房間的光線降下來，這張會用極少的音符把空氣拉得很深。\nhttps://open.spotify.com/album/example"
+    );
+  });
+
+  it("uses native share for text plus link when available", async () => {
+    const nativeShare = vi.fn().mockResolvedValue(undefined);
+    Object.assign(navigator, {
+      share: nativeShare
+    });
+
+    const result = await sharePick(buildPickSharePayload(pick));
+
+    expect(result.status).toBe("shared");
+    expect(nativeShare).toHaveBeenCalledWith({
+      title: "Kind of Blue · Miles Davis",
+      text: "今天想把《Kind of Blue》留給你。Miles Davis，把房間的光線降下來，這張會用極少的音符把空氣拉得很深。",
+      url: "https://open.spotify.com/album/example"
+    });
+  });
+
+  it("builds a share-image payload and same-origin image url", () => {
+    const payload = buildShareImagePayload(pick);
+    const url = buildShareImageUrl(payload, "https://www.noesis.studio");
+
+    expect(payload.title).toBe("Kind of Blue");
+    expect(payload.reason).toBe("把房間的光線降下來，這張會用極少的音符把空氣拉得很深。");
+    expect(url).toContain("https://www.noesis.studio/api/share-image");
+    expect(url).toContain("title=Kind+of+Blue");
   });
 });

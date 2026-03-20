@@ -5,19 +5,15 @@ import { JazzPick } from "@/types/jazz";
 type ShareSheetProps = {
   pick: JazzPick | null;
   onClose: () => void;
-  onTextShare: (pick: JazzPick) => void;
-  onFacebookShare: (pick: JazzPick) => void;
-  onInstagramShare: (pick: JazzPick) => void;
-  onCopyLink: (pick: JazzPick) => void;
+  onShareTextLink: (pick: JazzPick) => void;
+  onShareImage: (pick: JazzPick) => void;
 };
 
 export function ShareSheet({
   pick,
   onClose,
-  onTextShare,
-  onFacebookShare,
-  onInstagramShare,
-  onCopyLink
+  onShareTextLink,
+  onShareImage
 }: ShareSheetProps) {
   if (!pick) {
     return null;
@@ -55,31 +51,17 @@ export function ShareSheet({
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
           <button
             type="button"
-            onClick={() => onTextShare(pick)}
+            onClick={() => onShareTextLink(pick)}
             className="rounded-[20px] border border-white/10 bg-white/[0.04] px-4 py-4 text-left transition hover:border-white/20 hover:bg-white/[0.08]"
           >
-            <p className="text-sm font-medium text-cream">文字發文</p>
+            <p className="text-sm font-medium text-cream">文字＋連結</p>
           </button>
           <button
             type="button"
-            onClick={() => onFacebookShare(pick)}
+            onClick={() => onShareImage(pick)}
             className="rounded-[20px] border border-white/10 bg-white/[0.04] px-4 py-4 text-left transition hover:border-white/20 hover:bg-white/[0.08]"
           >
-            <p className="text-sm font-medium text-cream">Facebook</p>
-          </button>
-          <button
-            type="button"
-            onClick={() => onInstagramShare(pick)}
-            className="rounded-[20px] border border-white/10 bg-white/[0.04] px-4 py-4 text-left transition hover:border-white/20 hover:bg-white/[0.08]"
-          >
-            <p className="text-sm font-medium text-cream">Instagram</p>
-          </button>
-          <button
-            type="button"
-            onClick={() => onCopyLink(pick)}
-            className="rounded-[20px] border border-white/10 bg-white/[0.04] px-4 py-4 text-left transition hover:border-white/20 hover:bg-white/[0.08]"
-          >
-            <p className="text-sm font-medium text-cream">複製連結</p>
+            <p className="text-sm font-medium text-cream">圖片分享</p>
           </button>
         </div>
       </div>

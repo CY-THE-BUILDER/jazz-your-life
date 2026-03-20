@@ -6,6 +6,16 @@ export type SharePayload = {
   url: string;
 };
 
+export type ShareImagePayload = {
+  title: string;
+  artist: string;
+  reason: string;
+  imageUrl: string;
+  accentColor: string;
+  subgenre: string;
+  year: number;
+};
+
 export function buildPickSharePayload(pick: JazzPick): SharePayload {
   return {
     title: `${pick.title} · ${pick.artist}`,
@@ -35,6 +45,30 @@ export function buildInstagramWebUrl() {
 
 export function isMobileUserAgent(userAgent: string) {
   return /iphone|ipad|ipod|android/i.test(userAgent);
+}
+
+export function buildShareImagePayload(pick: JazzPick): ShareImagePayload {
+  return {
+    title: pick.title,
+    artist: pick.artist,
+    reason: pick.recommendationReason,
+    imageUrl: pick.imageUrl,
+    accentColor: pick.accentColor,
+    subgenre: pick.subgenre,
+    year: pick.year
+  };
+}
+
+export function buildShareImageUrl(payload: ShareImagePayload, origin: string) {
+  const url = new URL("/api/share-image", origin);
+  url.searchParams.set("title", payload.title);
+  url.searchParams.set("artist", payload.artist);
+  url.searchParams.set("reason", payload.reason);
+  url.searchParams.set("imageUrl", payload.imageUrl);
+  url.searchParams.set("accentColor", payload.accentColor);
+  url.searchParams.set("subgenre", payload.subgenre);
+  url.searchParams.set("year", String(payload.year));
+  return url.toString();
 }
 
 export async function copyShareText(payload: SharePayload) {
@@ -71,4 +105,43 @@ export async function sharePick(payload: SharePayload) {
   }
 
   return { status: "unavailable" as const };
+}
+
+export async function sharePickImage(payload: {
+  title: string;
+  text: string;
+  imageUrl: string;
+}) {
+  if (typeof window === "undefined") {
+    return { status: "unavailable" as const };
+  }
+
+  const response = await fetch(payload.imageUrl);
+  if (!response.ok) {
+    return { status: "unavailable" as const };
+  }
+
+  const blob = await response.blob();
+  const file = new File([blob], "jazz-your-life-share.png", {
+    type: blob.type || "image/png"
+  });
+
+  if (navigator.canShare?.({ files: [file] }) && navigator.share) {
+    await navigator.share({
+      title: payload.title,
+      text: payload.text,
+      files: [file]
+    });
+    return { status: "shared" as const };
+  }
+
+  const objectUrl = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = objectUrl;
+  link.download = "jazz-your-life-share.png";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(objectUrl);
+  return { status: "downloaded" as const };
 }

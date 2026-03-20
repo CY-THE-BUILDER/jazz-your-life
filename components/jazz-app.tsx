@@ -16,15 +16,12 @@ import {
 } from "@/lib/recommendation-history";
 import { buildCuratedFeed } from "@/lib/spotify-recommendations";
 import {
-  buildFacebookShareUrl,
-  buildInstagramLaunchUrl,
-  buildInstagramWebUrl,
   buildPickSharePayload,
-  buildSmsShareUrl,
-  copyShareUrl,
+  buildShareImagePayload,
+  buildShareImageUrl,
   copyShareText,
-  isMobileUserAgent,
-  sharePick
+  sharePick,
+  sharePickImage
 } from "@/lib/share";
 import { JazzPick, RecommendationFeed, SpotifySession, ToastMessage, Vibe } from "@/types/jazz";
 
@@ -219,44 +216,38 @@ export function JazzApp() {
     setShareTarget(pick);
   }
 
-  async function handleTextShare(pick: JazzPick) {
+  async function handleShareTextLink(pick: JazzPick) {
     const payload = buildPickSharePayload(pick);
-    const isMobile = isMobileUserAgent(navigator.userAgent);
+    const result = await sharePick(payload);
 
-    if (isMobile) {
-      window.location.href = buildSmsShareUrl(payload);
-      setShareTarget(null);
-      return;
+    if (result.status === "shared") {
+      pushToast("已開啟分享。");
+    } else if (result.status === "copied") {
+      pushToast("文字與連結已複製。");
+    } else {
+      const copied = await copyShareText(payload);
+      pushToast(copied.status === "copied" ? "文字與連結已複製。" : "目前無法分享。");
     }
 
-    await handleNativeShare(pick);
-  }
-
-  function handleFacebookShare(pick: JazzPick) {
-    const shareUrl = buildFacebookShareUrl(buildPickSharePayload(pick));
-    window.open(shareUrl, "_blank", "noopener,noreferrer");
-    pushToast("已開啟 Facebook 分享頁。");
     setShareTarget(null);
   }
 
-  async function handleInstagramShare(pick: JazzPick) {
-    const payload = buildPickSharePayload(pick);
-    const isMobile = isMobileUserAgent(navigator.userAgent);
+  async function handleShareImage(pick: JazzPick) {
+    const imageUrl = buildShareImageUrl(buildShareImagePayload(pick), window.location.origin);
+    const result = await sharePickImage({
+      title: `${pick.title} · ${pick.artist}`,
+      text: pick.recommendationReason,
+      imageUrl
+    });
 
-    if (isMobile && typeof navigator.share === "function") {
-      await handleNativeShare(pick);
-      return;
+    if (result.status === "shared") {
+      pushToast("已開啟圖片分享。");
+    } else if (result.status === "downloaded") {
+      pushToast("圖片已下載。");
+    } else {
+      pushToast("目前無法分享圖片。");
     }
 
-    const copyResult = await copyShareText(payload);
-    window.location.assign(isMobile ? buildInstagramLaunchUrl() : buildInstagramWebUrl());
-    pushToast(copyResult.status === "copied" ? "已帶著文案開啟 Instagram。" : "已開啟 Instagram。");
-    setShareTarget(null);
-  }
-
-  async function handleCopyLink(pick: JazzPick) {
-    const result = await copyShareUrl(pick.shareUrl);
-    pushToast(result.status === "copied" ? "Spotify 連結已複製。" : "目前無法複製連結。");
     setShareTarget(null);
   }
 
@@ -291,10 +282,8 @@ export function JazzApp() {
       <ShareSheet
         pick={shareTarget}
         onClose={() => setShareTarget(null)}
-        onTextShare={handleTextShare}
-        onFacebookShare={handleFacebookShare}
-        onInstagramShare={handleInstagramShare}
-        onCopyLink={handleCopyLink}
+        onShareTextLink={handleShareTextLink}
+        onShareImage={handleShareImage}
       />
       <main className="relative overflow-hidden">
         <div className="ambient ambient-left" />
