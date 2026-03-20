@@ -4,7 +4,8 @@ import {
   buildInstagramLaunchUrl,
   buildInstagramWebUrl,
   buildPickSharePayload,
-  buildSmsShareUrl
+  buildSmsShareUrl,
+  isMobileUserAgent
 } from "@/lib/share";
 import { JazzPick } from "@/types/jazz";
 
@@ -51,5 +52,10 @@ describe("share helpers", () => {
   it("exposes instagram launch targets", () => {
     expect(buildInstagramLaunchUrl()).toBe("instagram://app");
     expect(buildInstagramWebUrl()).toBe("https://www.instagram.com/");
+  });
+
+  it("detects mobile user agents for direct share redirects", () => {
+    expect(isMobileUserAgent("Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)")).toBe(true);
+    expect(isMobileUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0)")).toBe(false);
   });
 });

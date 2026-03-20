@@ -444,64 +444,239 @@ export const jazzPicks: JazzPick[] = [
       source: "curated"
     },
     { bg: "#101316", glow: "#29343f", accent: "#87a0af", text: "#ecf0ef" }
+  ),
+  withCover(
+    {
+      id: "maiden-voyage",
+      title: "Maiden Voyage",
+      artist: "Herbie Hancock",
+      type: "album",
+      subgenre: "Modal Jazz",
+      vibeTags: ["Classic", "Exploratory", "Focus"],
+      recommendationReason: "推進很穩，線條很深，像把海面下那種安靜而持續的流動慢慢放大。",
+      spotifyUrl: "https://open.spotify.com/search/Maiden%20Voyage%20Herbie%20Hancock",
+      shareUrl: "https://open.spotify.com/search/Maiden%20Voyage%20Herbie%20Hancock",
+      year: 1965,
+      durationLabel: "40 min",
+      accentColor: "#6f8ca6",
+      source: "curated"
+    },
+    { bg: "#10151a", glow: "#29495e", accent: "#7fa2c3", text: "#eef3f6" }
+  ),
+  withCover(
+    {
+      id: "journey-in-satchidananda",
+      title: "Journey in Satchidananda",
+      artist: "Alice Coltrane",
+      type: "album",
+      subgenre: "Spiritual Jazz",
+      vibeTags: ["Exploratory", "Late Night"],
+      recommendationReason: "不是把夜色壓低，而是把它撐開。弦樂與低音一落，整張就有了冥想般的向心力。",
+      spotifyUrl: "https://open.spotify.com/search/Journey%20in%20Satchidananda%20Alice%20Coltrane",
+      shareUrl: "https://open.spotify.com/search/Journey%20in%20Satchidananda%20Alice%20Coltrane",
+      year: 1971,
+      durationLabel: "33 min",
+      accentColor: "#9f8b60",
+      source: "curated"
+    },
+    { bg: "#15130f", glow: "#4c3f2b", accent: "#bea36d", text: "#f4ecdf" }
+  ),
+  withCover(
+    {
+      id: "idle-moments",
+      title: "Idle Moments",
+      artist: "Grant Green",
+      type: "album",
+      subgenre: "Jazz",
+      vibeTags: ["Late Night", "Focus"],
+      recommendationReason: "速度放得很鬆，卻沒有一秒散掉。適合在夜裡把呼吸和思緒都慢慢放回原位。",
+      spotifyUrl: "https://open.spotify.com/search/Idle%20Moments%20Grant%20Green",
+      shareUrl: "https://open.spotify.com/search/Idle%20Moments%20Grant%20Green",
+      year: 1963,
+      durationLabel: "40 min",
+      accentColor: "#8c9d86",
+      source: "curated"
+    },
+    { bg: "#131613", glow: "#3b4a3c", accent: "#9cb08f", text: "#eef2e8" }
+  ),
+  withCover(
+    {
+      id: "john-coltrane-and-johnny-hartman",
+      title: "John Coltrane and Johnny Hartman",
+      artist: "John Coltrane & Johnny Hartman",
+      type: "album",
+      subgenre: "Jazz",
+      vibeTags: ["Late Night", "Classic"],
+      recommendationReason: "像把窗邊的燈調暗一格之後，才聽得見的那種溫度。聲線與薩克斯風都極有分寸。",
+      spotifyUrl: "https://open.spotify.com/search/John%20Coltrane%20and%20Johnny%20Hartman",
+      shareUrl: "https://open.spotify.com/search/John%20Coltrane%20and%20Johnny%20Hartman",
+      year: 1963,
+      durationLabel: "31 min",
+      accentColor: "#9d8976",
+      source: "curated"
+    },
+    { bg: "#171311", glow: "#4a3b34", accent: "#b29a83", text: "#f4ece1" }
+  ),
+  withCover(
+    {
+      id: "mysterious-traveller",
+      title: "Mysterious Traveller",
+      artist: "Weather Report",
+      type: "album",
+      subgenre: "Fusion",
+      vibeTags: ["Fusion", "Exploratory"],
+      recommendationReason: "電氣聲響與節奏結構交錯得非常漂亮，整張像一段始終向前的長鏡頭。",
+      spotifyUrl: "https://open.spotify.com/search/Mysterious%20Traveller%20Weather%20Report",
+      shareUrl: "https://open.spotify.com/search/Mysterious%20Traveller%20Weather%20Report",
+      year: 1974,
+      durationLabel: "41 min",
+      accentColor: "#7a8da7",
+      source: "curated"
+    },
+    { bg: "#101419", glow: "#273f53", accent: "#89a2c4", text: "#eef3f6" }
+  ),
+  withCover(
+    {
+      id: "electric-byrd",
+      title: "Electric Byrd",
+      artist: "Donald Byrd",
+      type: "album",
+      subgenre: "Fusion",
+      vibeTags: ["Fusion", "Focus"],
+      recommendationReason: "律動黏得住，銅管也亮得夠俐落，適合想把精神提起來但不想太躁的時候。",
+      spotifyUrl: "https://open.spotify.com/search/Electric%20Byrd%20Donald%20Byrd",
+      shareUrl: "https://open.spotify.com/search/Electric%20Byrd%20Donald%20Byrd",
+      year: 1970,
+      durationLabel: "38 min",
+      accentColor: "#b88656",
+      source: "curated"
+    },
+    { bg: "#17120f", glow: "#503626", accent: "#cf9660", text: "#f4ebe0" }
+  ),
+  withCover(
+    {
+      id: "extensions",
+      title: "Extensions",
+      artist: "McCoy Tyner",
+      type: "album",
+      subgenre: "Spiritual Jazz",
+      vibeTags: ["Exploratory", "Focus"],
+      recommendationReason: "張力不小，但重心很穩。適合想把耳朵再往外推一點，卻又不想失去中心的時候。",
+      spotifyUrl: "https://open.spotify.com/search/Extensions%20McCoy%20Tyner",
+      shareUrl: "https://open.spotify.com/search/Extensions%20McCoy%20Tyner",
+      year: 1973,
+      durationLabel: "44 min",
+      accentColor: "#a38b67",
+      source: "curated"
+    },
+    { bg: "#15120f", glow: "#4a3b2b", accent: "#b89b72", text: "#f3ece1" }
+  ),
+  withCover(
+    {
+      id: "you-must-believe-in-spring",
+      title: "You Must Believe in Spring",
+      artist: "Bill Evans",
+      type: "album",
+      subgenre: "Piano Jazz",
+      vibeTags: ["Late Night", "Focus"],
+      recommendationReason: "不是把情緒說滿，而是把細節留得夠長。很適合夜深之後，讓鋼琴把房間慢慢安靜下來。",
+      spotifyUrl: "https://open.spotify.com/search/You%20Must%20Believe%20in%20Spring%20Bill%20Evans",
+      shareUrl: "https://open.spotify.com/search/You%20Must%20Believe%20in%20Spring%20Bill%20Evans",
+      year: 1981,
+      durationLabel: "37 min",
+      accentColor: "#96a08d",
+      source: "curated"
+    },
+    { bg: "#141513", glow: "#40433d", accent: "#a7b19d", text: "#f1eee6" }
   )
 ];
 
 const curatedPickIdsByVibe = {
   Classic: [
     "kind-of-blue",
-    "moanin",
+    "blue-train",
+    "somethin-else",
     "time-out",
-    "waltz-for-debby",
-    "blue-train"
+    "sunday-at-the-village-vanguard",
+    "moanin",
+    "maiden-voyage",
+    "chet-baker-sings",
+    "john-coltrane-and-johnny-hartman"
   ],
   Exploratory: [
-    "night-dreamer",
-    "speak-no-evil",
     "out-to-lunch",
+    "journey-in-satchidananda",
+    "speak-no-evil",
+    "night-dreamer",
     "the-epic",
-    "yellow"
+    "extensions",
+    "yellow",
+    "maiden-voyage"
   ],
   Fusion: [
     "head-hunters",
     "sextant",
     "heavy-weather",
+    "mysterious-traveller",
+    "electric-byrd",
+    "black-focus",
     "black-radio",
-    "black-focus"
+    "yellow"
   ],
   "Late Night": [
-    "night-dreamer",
     "undercurrent",
-    "waltz-for-debby",
     "chet-baker-sings",
-    "kind-of-blue"
+    "john-coltrane-and-johnny-hartman",
+    "idle-moments",
+    "you-must-believe-in-spring",
+    "waltz-for-debby",
+    "journey-in-satchidananda",
+    "night-dreamer"
   ],
   Focus: [
     "time-out",
     "bright-size-life",
-    "undercurrent",
     "source",
-    "black-focus"
+    "maiden-voyage",
+    "black-focus",
+    "undercurrent",
+    "idle-moments",
+    "extensions",
+    "you-must-believe-in-spring"
   ]
 } satisfies Record<JazzPick["vibeTags"][number], string[]>;
 
+function rotatePicks<T>(picks: T[], rotation: number) {
+  if (picks.length <= 1 || rotation === 0) {
+    return picks;
+  }
+
+  const offset = ((rotation % picks.length) + picks.length) % picks.length;
+  if (offset === 0) {
+    return picks;
+  }
+
+  return [...picks.slice(offset), ...picks.slice(0, offset)];
+}
+
 export function getCuratedPicksForVibe(
   vibe: JazzPick["vibeTags"][number],
-  options?: { limit?: number; excludeIds?: Set<string> }
+  options?: { limit?: number; excludeIds?: Set<string>; rotation?: number }
 ) {
   const ids = curatedPickIdsByVibe[vibe];
   const pickMap = new Map(jazzPicks.map((pick) => [pick.id, pick]));
-  const ordered = ids
+  const pool = ids
     .map((id) => pickMap.get(id))
     .filter((pick): pick is JazzPick => Boolean(pick));
-
-  const alternates = jazzPicks.filter(
-    (pick) => pick.vibeTags.includes(vibe) && !ordered.some((entry) => entry.id === pick.id)
-  );
-  const candidates = [...ordered, ...alternates];
   const excludedIds = options?.excludeIds ?? new Set<string>();
-  const fresh = candidates.filter((pick) => !excludedIds.has(pick.id));
-  const fallback = candidates.filter((pick) => excludedIds.has(pick.id));
+  const fresh = rotatePicks(
+    pool.filter((pick) => !excludedIds.has(pick.id)),
+    options?.rotation ?? 0
+  );
+  const fallback = rotatePicks(
+    pool.filter((pick) => excludedIds.has(pick.id)),
+    options?.rotation ?? 0
+  );
 
   return [...fresh, ...fallback].slice(0, options?.limit ?? 5);
 }

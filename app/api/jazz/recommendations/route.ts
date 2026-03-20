@@ -307,16 +307,17 @@ export async function GET(request: NextRequest) {
       .map((value) => value.trim())
       .filter(Boolean)
   );
+  const rotation = Number.parseInt(request.nextUrl.searchParams.get("rotation") ?? "0", 10) || 0;
   const accessToken = await getValidSpotifyAccessToken();
 
   if (!accessToken) {
     const hydratedCurated = await Promise.all(
-      getCuratedPicksForVibe(vibe, { limit: 8, excludeIds: excludedIds }).map((pick) =>
+      getCuratedPicksForVibe(vibe, { limit: 8, excludeIds: excludedIds, rotation }).map((pick) =>
         hydratePublicArtworkForPick(pick)
       )
     );
 
-    return NextResponse.json(buildCuratedFeed(vibe, selectFreshPicks(hydratedCurated, excludedIds, 5)), {
+    return NextResponse.json(buildCuratedFeed(vibe, selectFreshPicks(hydratedCurated, excludedIds, 5, rotation)), {
       headers: { "Cache-Control": "no-store" }
     });
   }
@@ -361,7 +362,8 @@ export async function GET(request: NextRequest) {
     const personalizedPicks = selectFreshPicks(
       rankPicksForVibe(strongPersonalizedPicks, vibe, 12),
       excludedIds,
-      5
+      5,
+      rotation
     );
 
     if (personalizedPicks.length >= 3) {
@@ -386,13 +388,13 @@ export async function GET(request: NextRequest) {
     }
 
     const hydratedCurated = await Promise.all(
-      getCuratedPicksForVibe(vibe, { limit: 8, excludeIds: excludedIds }).map((pick) =>
+      getCuratedPicksForVibe(vibe, { limit: 8, excludeIds: excludedIds, rotation }).map((pick) =>
         hydrateCuratedPick(accessToken, pick)
       )
     );
 
     return NextResponse.json(
-      buildCuratedFeed(vibe, selectFreshPicks(hydratedCurated, excludedIds, 5)),
+      buildCuratedFeed(vibe, selectFreshPicks(hydratedCurated, excludedIds, 5, rotation)),
       {
         headers: { "Cache-Control": "no-store" }
       }
@@ -400,12 +402,12 @@ export async function GET(request: NextRequest) {
   } catch {
     clearSpotifyCookies();
     const hydratedCurated = await Promise.all(
-      getCuratedPicksForVibe(vibe, { limit: 8, excludeIds: excludedIds }).map((pick) =>
+      getCuratedPicksForVibe(vibe, { limit: 8, excludeIds: excludedIds, rotation }).map((pick) =>
         hydratePublicArtworkForPick(pick)
       )
     );
 
-    return NextResponse.json(buildCuratedFeed(vibe, selectFreshPicks(hydratedCurated, excludedIds, 5)), {
+    return NextResponse.json(buildCuratedFeed(vibe, selectFreshPicks(hydratedCurated, excludedIds, 5, rotation)), {
       headers: { "Cache-Control": "no-store" }
     });
   }

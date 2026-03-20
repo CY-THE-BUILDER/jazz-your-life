@@ -423,4 +423,54 @@ describe("spotify recommendation mapping", () => {
 
     expect(shelf[0].title).toBe("Sextant");
   });
+
+  it("can rotate equally fresh personalized candidates between visits", () => {
+    const candidates = [
+      buildAlbumPick(
+        {
+          id: "album-1",
+          name: "Head Hunters",
+          release_date: "1973-10-26",
+          images: [{ url: "https://i.scdn.co/image/hh" }],
+          external_urls: { spotify: "https://open.spotify.com/album/album-1" },
+          artists: [{ id: "artist-herbie", name: "Herbie Hancock" }]
+        },
+        { id: "artist-herbie", name: "Herbie Hancock", genres: ["jazz fusion", "jazz funk"] },
+        "Fusion",
+        "search"
+      ),
+      buildAlbumPick(
+        {
+          id: "album-2",
+          name: "Mysterious Traveller",
+          release_date: "1974-01-01",
+          images: [{ url: "https://i.scdn.co/image/mt" }],
+          external_urls: { spotify: "https://open.spotify.com/album/album-2" },
+          artists: [{ id: "artist-weather", name: "Weather Report" }]
+        },
+        { id: "artist-weather", name: "Weather Report", genres: ["jazz fusion"] },
+        "Fusion",
+        "search"
+      ),
+      buildAlbumPick(
+        {
+          id: "album-3",
+          name: "Black Focus",
+          release_date: "2016-01-01",
+          images: [{ url: "https://i.scdn.co/image/bf" }],
+          external_urls: { spotify: "https://open.spotify.com/album/album-3" },
+          artists: [{ id: "artist-yussef", name: "Yussef Kamaal" }]
+        },
+        { id: "artist-yussef", name: "Yussef Kamaal", genres: ["jazz fusion", "broken beat"] },
+        "Fusion",
+        "search"
+      )
+    ];
+
+    const firstShelf = selectFreshPicks(candidates, new Set(), 2, 0).map((pick) => pick.id);
+    const rotatedShelf = selectFreshPicks(candidates, new Set(), 2, 1).map((pick) => pick.id);
+
+    expect(rotatedShelf).not.toEqual(firstShelf);
+    expect(rotatedShelf[0]).not.toBe(firstShelf[0]);
+  });
 });

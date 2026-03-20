@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { getCuratedPicksForVibe, jazzPicks } from "@/data/jazz-picks";
+import { vibeOptions } from "@/types/jazz";
 
 describe("curated jazz picks", () => {
   function countOverlap(left: string[], right: string[]) {
@@ -57,15 +58,30 @@ describe("curated jazz picks", () => {
     expect(shelf[0]).not.toBe("undercurrent");
   });
 
-  it("can rotate the classic shelf after excluding the first batch", () => {
-    const firstShelf = getCuratedPicksForVibe("Classic").map((pick) => pick.id);
-    const rotatedShelf = getCuratedPicksForVibe("Classic", {
-      excludeIds: new Set(firstShelf),
-      limit: 5
-    }).map((pick) => pick.id);
+  it("can rotate every flavor shelf after excluding the first batch", () => {
+    for (const vibe of vibeOptions) {
+      const firstShelf = getCuratedPicksForVibe(vibe).map((pick) => pick.id);
+      const rotatedShelf = getCuratedPicksForVibe(vibe, {
+        excludeIds: new Set(firstShelf),
+        limit: 5
+      }).map((pick) => pick.id);
 
-    expect(rotatedShelf).not.toEqual(firstShelf);
-    expect(rotatedShelf[0]).not.toBe(firstShelf[0]);
-    expect(rotatedShelf.some((id) => !firstShelf.includes(id))).toBe(true);
+      expect(rotatedShelf).not.toEqual(firstShelf);
+      expect(rotatedShelf[0]).not.toBe(firstShelf[0]);
+      expect(rotatedShelf.some((id) => !firstShelf.includes(id))).toBe(true);
+    }
+  });
+
+  it("uses rotation to surface a different starting shelf even before the exclusion list fills up", () => {
+    for (const vibe of vibeOptions) {
+      const defaultShelf = getCuratedPicksForVibe(vibe, { limit: 5 }).map((pick) => pick.id);
+      const rotatedShelf = getCuratedPicksForVibe(vibe, {
+        limit: 5,
+        rotation: 1
+      }).map((pick) => pick.id);
+
+      expect(rotatedShelf).not.toEqual(defaultShelf);
+      expect(rotatedShelf[0]).not.toBe(defaultShelf[0]);
+    }
   });
 });

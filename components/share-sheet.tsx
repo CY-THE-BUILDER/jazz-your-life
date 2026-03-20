@@ -59,7 +59,6 @@ export function ShareSheet({
             className="rounded-[20px] border border-white/10 bg-white/[0.04] px-4 py-4 text-left transition hover:border-white/20 hover:bg-white/[0.08]"
           >
             <p className="text-sm font-medium text-cream">文字發文</p>
-            <p className="mt-1 text-xs leading-5 text-mist">帶著文案直接開啟簡訊或系統分享。</p>
           </button>
           <button
             type="button"
@@ -67,7 +66,6 @@ export function ShareSheet({
             className="rounded-[20px] border border-white/10 bg-white/[0.04] px-4 py-4 text-left transition hover:border-white/20 hover:bg-white/[0.08]"
           >
             <p className="text-sm font-medium text-cream">Facebook</p>
-            <p className="mt-1 text-xs leading-5 text-mist">帶著標題與引文打開分享頁。</p>
           </button>
           <button
             type="button"
@@ -75,7 +73,6 @@ export function ShareSheet({
             className="rounded-[20px] border border-white/10 bg-white/[0.04] px-4 py-4 text-left transition hover:border-white/20 hover:bg-white/[0.08]"
           >
             <p className="text-sm font-medium text-cream">Instagram</p>
-            <p className="mt-1 text-xs leading-5 text-mist">先複製貼文文字，再開啟 Instagram。</p>
           </button>
           <button
             type="button"
@@ -83,7 +80,6 @@ export function ShareSheet({
             className="rounded-[20px] border border-white/10 bg-white/[0.04] px-4 py-4 text-left transition hover:border-white/20 hover:bg-white/[0.08]"
           >
             <p className="text-sm font-medium text-cream">複製連結</p>
-            <p className="mt-1 text-xs leading-5 text-mist">保留 Spotify 連結，稍後再貼到任何地方。</p>
           </button>
         </div>
       </div>

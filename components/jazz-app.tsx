@@ -9,7 +9,11 @@ import { Toasts } from "@/components/toast";
 import { VibeFilter } from "@/components/vibe-filter";
 import { getCuratedPicksForVibe } from "@/data/jazz-picks";
 import { getSavedPicks, savePicks } from "@/lib/jazz-storage";
-import { getRecentRecommendationIds, rememberRecommendationIds } from "@/lib/recommendation-history";
+import {
+  getRecommendationRotation,
+  getRecentRecommendationIds,
+  rememberRecommendationIds
+} from "@/lib/recommendation-history";
 import { buildCuratedFeed } from "@/lib/spotify-recommendations";
 import {
   buildFacebookShareUrl,
@@ -18,6 +22,7 @@ import {
   buildPickSharePayload,
   buildSmsShareUrl,
   copyShareText,
+  isMobileUserAgent,
   sharePick
 } from "@/lib/share";
 import { JazzPick, RecommendationFeed, SpotifySession, ToastMessage, Vibe } from "@/types/jazz";
@@ -113,15 +118,20 @@ export function JazzApp() {
   useEffect(() => {
     let ignore = false;
 
+    if (!isReady) {
+      return;
+    }
+
     async function loadRecommendations() {
       setIsLoadingFeed(true);
       const excludeIds = Array.from(
         new Set([...savedIds, ...getRecentRecommendationIds(activeVibe)])
       );
+      const rotation = getRecommendationRotation(activeVibe);
 
       try {
         const response = await fetch(
-          `/api/jazz/recommendations?vibe=${encodeURIComponent(activeVibe)}&exclude=${encodeURIComponent(excludeIds.join(","))}`,
+          `/api/jazz/recommendations?vibe=${encodeURIComponent(activeVibe)}&exclude=${encodeURIComponent(excludeIds.join(","))}&rotation=${rotation}`,
           {
             cache: "no-store"
           }
@@ -144,7 +154,8 @@ export function JazzApp() {
           const fallbackFeed = buildCuratedFeed(
             activeVibe,
             getCuratedPicksForVibe(activeVibe, {
-              excludeIds: new Set(excludeIds)
+              excludeIds: new Set(excludeIds),
+              rotation
             })
           );
           setFeed(fallbackFeed);
@@ -165,7 +176,7 @@ export function JazzApp() {
     return () => {
       ignore = true;
     };
-  }, [activeVibe, spotifySession.connected, savedIds]);
+  }, [activeVibe, isReady, spotifySession.connected, savedIds]);
 
   function handleToggleSave(pick: JazzPick) {
     setSavedPicks((current) => {
@@ -209,7 +220,7 @@ export function JazzApp() {
 
   async function handleTextShare(pick: JazzPick) {
     const payload = buildPickSharePayload(pick);
-    const isMobile = /iphone|ipad|ipod|android/i.test(navigator.userAgent);
+    const isMobile = isMobileUserAgent(navigator.userAgent);
 
     if (isMobile) {
       window.location.href = buildSmsShareUrl(payload);
@@ -221,7 +232,12 @@ export function JazzApp() {
   }
 
   function handleFacebookShare(pick: JazzPick) {
-    window.open(buildFacebookShareUrl(buildPickSharePayload(pick)), "_blank", "noopener,noreferrer");
+    const shareUrl = buildFacebookShareUrl(buildPickSharePayload(pick));
+    if (isMobileUserAgent(navigator.userAgent)) {
+      window.location.assign(shareUrl);
+    } else {
+      window.open(shareUrl, "_blank", "noopener,noreferrer");
+    }
     pushToast("已開啟 Facebook 分享頁。");
     setShareTarget(null);
   }
@@ -229,7 +245,7 @@ export function JazzApp() {
   async function handleInstagramShare(pick: JazzPick) {
     const payload = buildPickSharePayload(pick);
     const copyResult = await copyShareText(payload);
-    const isMobile = /iphone|ipad|ipod|android/i.test(navigator.userAgent);
+    const isMobile = isMobileUserAgent(navigator.userAgent);
 
     window.location.assign(isMobile ? buildInstagramLaunchUrl() : buildInstagramWebUrl());
     pushToast(

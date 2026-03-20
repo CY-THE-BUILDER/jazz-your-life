@@ -33,6 +33,10 @@ export function buildInstagramWebUrl() {
   return "https://www.instagram.com/";
 }
 
+export function isMobileUserAgent(userAgent: string) {
+  return /iphone|ipad|ipod|android/i.test(userAgent);
+}
+
 export async function copyShareText(payload: SharePayload) {
   if (typeof window === "undefined" || !navigator.clipboard?.writeText) {
     return { status: "unavailable" as const };

@@ -329,16 +329,39 @@ export function rankPicksForVibe(picks: JazzPick[], vibe: Vibe, limit = 5) {
   return diversifyPicks(deduped, vibe, limit);
 }
 
-export function selectFreshPicks(picks: JazzPick[], excludedIds: Set<string>, limit = 5) {
+export function selectFreshPicks(
+  picks: JazzPick[],
+  excludedIds: Set<string>,
+  limit = 5,
+  rotation = 0
+) {
   const deduped = dedupePicks(picks);
+  const rotate = (input: JazzPick[], rotation: number) => {
+    if (input.length <= 1 || rotation === 0) {
+      return input;
+    }
+
+    const offset = ((rotation % input.length) + input.length) % input.length;
+    if (offset === 0) {
+      return input;
+    }
+
+    return [...input.slice(offset), ...input.slice(0, offset)];
+  };
 
   if (excludedIds.size === 0) {
-    return deduped.slice(0, limit);
+    return rotate(deduped, rotation).slice(0, limit);
   }
 
-  const fresh = deduped.filter((pick) => !excludedIds.has(pick.id));
+  const fresh = rotate(
+    deduped.filter((pick) => !excludedIds.has(pick.id)),
+    rotation
+  );
   const seen = new Set(fresh.map((pick) => pick.id));
-  const fallback = deduped.filter((pick) => !seen.has(pick.id));
+  const fallback = rotate(
+    deduped.filter((pick) => !seen.has(pick.id)),
+    rotation
+  );
 
   return [...fresh, ...fallback].slice(0, limit);
 }
