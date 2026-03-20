@@ -21,6 +21,7 @@ import {
   buildInstagramWebUrl,
   buildPickSharePayload,
   buildSmsShareUrl,
+  copyShareUrl,
   copyShareText,
   isMobileUserAgent,
   sharePick
@@ -233,32 +234,29 @@ export function JazzApp() {
 
   function handleFacebookShare(pick: JazzPick) {
     const shareUrl = buildFacebookShareUrl(buildPickSharePayload(pick));
-    if (isMobileUserAgent(navigator.userAgent)) {
-      window.location.assign(shareUrl);
-    } else {
-      window.open(shareUrl, "_blank", "noopener,noreferrer");
-    }
+    window.open(shareUrl, "_blank", "noopener,noreferrer");
     pushToast("已開啟 Facebook 分享頁。");
     setShareTarget(null);
   }
 
   async function handleInstagramShare(pick: JazzPick) {
     const payload = buildPickSharePayload(pick);
-    const copyResult = await copyShareText(payload);
     const isMobile = isMobileUserAgent(navigator.userAgent);
 
+    if (isMobile && typeof navigator.share === "function") {
+      await handleNativeShare(pick);
+      return;
+    }
+
+    const copyResult = await copyShareText(payload);
     window.location.assign(isMobile ? buildInstagramLaunchUrl() : buildInstagramWebUrl());
-    pushToast(
-      copyResult.status === "copied"
-        ? "貼文文字已複製，接著到 Instagram 貼上。"
-        : "已開啟 Instagram。"
-    );
+    pushToast(copyResult.status === "copied" ? "已帶著文案開啟 Instagram。" : "已開啟 Instagram。");
     setShareTarget(null);
   }
 
   async function handleCopyLink(pick: JazzPick) {
-    const result = await copyShareText(buildPickSharePayload(pick));
-    pushToast(result.status === "copied" ? "分享文字與連結已複製。" : "目前無法複製連結。");
+    const result = await copyShareUrl(pick.shareUrl);
+    pushToast(result.status === "copied" ? "Spotify 連結已複製。" : "目前無法複製連結。");
     setShareTarget(null);
   }
 

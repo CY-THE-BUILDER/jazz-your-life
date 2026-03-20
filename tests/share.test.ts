@@ -1,10 +1,11 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   buildFacebookShareUrl,
   buildInstagramLaunchUrl,
   buildInstagramWebUrl,
   buildPickSharePayload,
   buildSmsShareUrl,
+  copyShareUrl,
   isMobileUserAgent
 } from "@/lib/share";
 import { JazzPick } from "@/types/jazz";
@@ -57,5 +58,19 @@ describe("share helpers", () => {
   it("detects mobile user agents for direct share redirects", () => {
     expect(isMobileUserAgent("Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)")).toBe(true);
     expect(isMobileUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0)")).toBe(false);
+  });
+
+  it("copies only the spotify url for copy-link actions", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.assign(navigator, {
+      clipboard: {
+        writeText
+      }
+    });
+
+    const result = await copyShareUrl("https://open.spotify.com/album/example");
+
+    expect(result.status).toBe("copied");
+    expect(writeText).toHaveBeenCalledWith("https://open.spotify.com/album/example");
   });
 });

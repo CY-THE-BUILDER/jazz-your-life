@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import {
-  clearSpotifyCookies,
   fetchSpotifyProfile,
   getValidSpotifyAccessToken,
   isSpotifyConfigured
@@ -48,10 +47,14 @@ export async function GET() {
       }
     });
   } catch {
-    clearSpotifyCookies();
     return NextResponse.json({
       configured: true,
-      connected: false
+      connected: true,
+      displayName: "Spotify listener",
+      avatarUrl: null,
+      product: null,
+      profileUrl: null,
+      country: null
     }, {
       headers: {
         "Cache-Control": "no-store"

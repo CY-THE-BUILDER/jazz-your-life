@@ -46,6 +46,15 @@ export async function copyShareText(payload: SharePayload) {
   return { status: "copied" as const };
 }
 
+export async function copyShareUrl(url: string) {
+  if (typeof window === "undefined" || !navigator.clipboard?.writeText) {
+    return { status: "unavailable" as const };
+  }
+
+  await navigator.clipboard.writeText(url);
+  return { status: "copied" as const };
+}
+
 export async function sharePick(payload: SharePayload) {
   if (typeof window === "undefined") {
     return { status: "unavailable" as const };

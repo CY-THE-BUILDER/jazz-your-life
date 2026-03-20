@@ -15,10 +15,38 @@ describe("curated jazz picks", () => {
     }
   });
 
-  it("use spotify search urls instead of stale hardcoded ids", () => {
+  it("never ship track links for album recommendations", () => {
     for (const pick of jazzPicks) {
-      expect(pick.spotifyUrl.startsWith("https://open.spotify.com/search/")).toBe(true);
+      expect(pick.spotifyUrl.includes("open.spotify.com/track/")).toBe(false);
       expect(pick.shareUrl).toBe(pick.spotifyUrl);
+    }
+  });
+
+  it("keeps direct Spotify album links when the curated data already knows the album url", () => {
+    const exactAlbumIds = [
+      "kind-of-blue",
+      "moanin",
+      "time-out",
+      "somethin-else",
+      "saxophone-colossus",
+      "night-dreamer",
+      "speak-no-evil",
+      "out-to-lunch",
+      "head-hunters",
+      "bright-size-life",
+      "undercurrent",
+      "waltz-for-debby",
+      "chet-baker-sings",
+      "maiden-voyage",
+      "journey-in-satchidananda",
+      "idle-moments",
+      "john-coltrane-and-johnny-hartman",
+      "black-focus"
+    ];
+
+    for (const id of exactAlbumIds) {
+      const pick = jazzPicks.find((entry) => entry.id === id);
+      expect(pick?.spotifyUrl.startsWith("https://open.spotify.com/album/")).toBe(true);
     }
   });
 

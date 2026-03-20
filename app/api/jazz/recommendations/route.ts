@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCuratedPicksForVibe, jazzPicks } from "@/data/jazz-picks";
 import {
-  clearSpotifyCookies,
   getValidSpotifyAccessToken,
   spotifyGet
 } from "@/lib/spotify-auth";
@@ -400,7 +399,6 @@ export async function GET(request: NextRequest) {
       }
     );
   } catch {
-    clearSpotifyCookies();
     const hydratedCurated = await Promise.all(
       getCuratedPicksForVibe(vibe, { limit: 8, excludeIds: excludedIds, rotation }).map((pick) =>
         hydratePublicArtworkForPick(pick)
