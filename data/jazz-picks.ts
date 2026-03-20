@@ -105,6 +105,60 @@ export const jazzPicks: JazzPick[] = [
   ),
   withCover(
     {
+      id: "blue-train",
+      title: "Blue Train",
+      artist: "John Coltrane",
+      type: "album",
+      subgenre: "Hard Bop",
+      vibeTags: ["Classic", "Exploratory"],
+      recommendationReason: "張力和秩序都在，像一列深夜列車進站前最後一段最穩的滑行。",
+      spotifyUrl: "https://open.spotify.com/search/Blue%20Train%20John%20Coltrane",
+      shareUrl: "https://open.spotify.com/search/Blue%20Train%20John%20Coltrane",
+      year: 1957,
+      durationLabel: "42 min",
+      accentColor: "#6683a4",
+      source: "curated"
+    },
+    { bg: "#10151b", glow: "#29425d", accent: "#7a9cc0", text: "#eef2f4" }
+  ),
+  withCover(
+    {
+      id: "somethin-else",
+      title: "Somethin' Else",
+      artist: "Cannonball Adderley",
+      type: "album",
+      subgenre: "Hard Bop",
+      vibeTags: ["Classic", "Focus"],
+      recommendationReason: "銅管的光澤和節奏的彈性都漂亮得恰到好處，任何時候放下去都體面。",
+      spotifyUrl: "https://open.spotify.com/search/Somethin'%20Else%20Cannonball%20Adderley",
+      shareUrl: "https://open.spotify.com/search/Somethin'%20Else%20Cannonball%20Adderley",
+      year: 1958,
+      durationLabel: "37 min",
+      accentColor: "#9e8258",
+      source: "curated"
+    },
+    { bg: "#15120f", glow: "#4e3d2c", accent: "#b29263", text: "#f4ece2" }
+  ),
+  withCover(
+    {
+      id: "saxophone-colossus",
+      title: "Saxophone Colossus",
+      artist: "Sonny Rollins",
+      type: "album",
+      subgenre: "Hard Bop",
+      vibeTags: ["Classic", "Focus"],
+      recommendationReason: "線條飽滿，步伐穩，像一張永遠知道什麼時候該往前、什麼時候該留白的專輯。",
+      spotifyUrl: "https://open.spotify.com/search/Saxophone%20Colossus%20Sonny%20Rollins",
+      shareUrl: "https://open.spotify.com/search/Saxophone%20Colossus%20Sonny%20Rollins",
+      year: 1956,
+      durationLabel: "40 min",
+      accentColor: "#b86854",
+      source: "curated"
+    },
+    { bg: "#171110", glow: "#563028", accent: "#cb7761", text: "#f4e7df" }
+  ),
+  withCover(
+    {
       id: "night-dreamer",
       title: "Night Dreamer",
       artist: "Wayne Shorter",
@@ -321,6 +375,24 @@ export const jazzPicks: JazzPick[] = [
   ),
   withCover(
     {
+      id: "sunday-at-the-village-vanguard",
+      title: "Sunday at the Village Vanguard",
+      artist: "Bill Evans Trio",
+      type: "album",
+      subgenre: "Piano Jazz",
+      vibeTags: ["Classic", "Late Night", "Focus"],
+      recommendationReason: "現場的呼吸、鋼琴的留白與低音的步伐都收得近，像把人直接帶回桌燈下那一刻。",
+      spotifyUrl: "https://open.spotify.com/search/Sunday%20at%20the%20Village%20Vanguard%20Bill%20Evans%20Trio",
+      shareUrl: "https://open.spotify.com/search/Sunday%20at%20the%20Village%20Vanguard%20Bill%20Evans%20Trio",
+      year: 1961,
+      durationLabel: "43 min",
+      accentColor: "#9d9585",
+      source: "curated"
+    },
+    { bg: "#171715", glow: "#44423c", accent: "#b6ae97", text: "#f4efe5" }
+  ),
+  withCover(
+    {
       id: "waltz-for-debby",
       title: "Waltz for Debby",
       artist: "Bill Evans Trio",
@@ -380,7 +452,8 @@ const curatedPickIdsByVibe = {
     "kind-of-blue",
     "moanin",
     "time-out",
-    "waltz-for-debby"
+    "waltz-for-debby",
+    "blue-train"
   ],
   Exploratory: [
     "night-dreamer",

@@ -56,4 +56,16 @@ describe("curated jazz picks", () => {
     expect(shelf[0]).not.toBe("night-dreamer");
     expect(shelf[0]).not.toBe("undercurrent");
   });
+
+  it("can rotate the classic shelf after excluding the first batch", () => {
+    const firstShelf = getCuratedPicksForVibe("Classic").map((pick) => pick.id);
+    const rotatedShelf = getCuratedPicksForVibe("Classic", {
+      excludeIds: new Set(firstShelf),
+      limit: 5
+    }).map((pick) => pick.id);
+
+    expect(rotatedShelf).not.toEqual(firstShelf);
+    expect(rotatedShelf[0]).not.toBe(firstShelf[0]);
+    expect(rotatedShelf.some((id) => !firstShelf.includes(id))).toBe(true);
+  });
 });
