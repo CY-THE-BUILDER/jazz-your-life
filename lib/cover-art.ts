@@ -18,6 +18,8 @@ type ItunesResponse = {
   results?: ItunesResult[];
 };
 
+const publicArtworkHydrationCache = new Map<string, Promise<JazzPick>>();
+
 function normalizeText(value: string) {
   return value
     .toLowerCase()
@@ -117,6 +119,25 @@ export async function hydratePublicArtworkForPick(
   pick: JazzPick,
   fetchImpl: FetchLike = fetch
 ) {
+  if (fetchImpl === fetch) {
+    const cacheKey = `${pick.id}:${pick.spotifyUrl}:${pick.artworkSourceUrl ?? ""}`;
+    const cached = publicArtworkHydrationCache.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    const pending = hydratePublicArtworkForPickUncached(pick, fetchImpl);
+    publicArtworkHydrationCache.set(cacheKey, pending);
+    return pending;
+  }
+
+  return hydratePublicArtworkForPickUncached(pick, fetchImpl);
+}
+
+async function hydratePublicArtworkForPickUncached(
+  pick: JazzPick,
+  fetchImpl: FetchLike = fetch
+) {
   const exactSpotifyUrl = isSpotifyAlbumUrl(pick.spotifyUrl) ? pick.spotifyUrl : null;
   const exactThumbnailUrl = exactSpotifyUrl
     ? await fetchSpotifyOEmbedThumbnail(exactSpotifyUrl, fetchImpl)
@@ -179,4 +200,8 @@ export async function hydratePublicArtworkForPick(
         }
       : {})
   };
+}
+
+export function clearPublicArtworkHydrationCache() {
+  publicArtworkHydrationCache.clear();
 }

@@ -23,7 +23,7 @@ import {
   vibeProfiles
 } from "@/lib/spotify-recommendations";
 import { hydratePublicArtworkForPick } from "@/lib/cover-art";
-import { JazzPick } from "@/types/jazz";
+import { JazzPick, RecommendationBatchRequest, RecommendationBatchResponse, RecommendationFeed, vibeOptions, Vibe } from "@/types/jazz";
 
 export const dynamic = "force-dynamic";
 
@@ -40,6 +40,14 @@ type RecentlyPlayedItem = {
 type SearchResponse = {
   tracks?: { items: SpotifyTrackEntity[] };
   albums?: { items: SpotifyAlbumEntity[] };
+};
+
+type ListenerData = {
+  topArtists: SpotifyArtistEntity[];
+  topTracks: SpotifyTrackEntity[];
+  recentlyPlayed: SpotifyTrackEntity[];
+  savedTracks: SpotifyTrackEntity[];
+  tasteProfile: ListenerTasteProfile;
 };
 
 function matchesCuratedJazzArtist(name: string) {
@@ -240,6 +248,21 @@ async function buildSearchDrivenPicks(
   );
 }
 
+async function buildCuratedResponseForVibe(
+  vibe: Vibe,
+  excludedIds: Set<string>,
+  rotation: number,
+  accessToken?: string | null
+) {
+  const hydratedCurated = await Promise.all(
+    getCuratedPicksForVibe(vibe, { limit: 8, excludeIds: excludedIds, rotation }).map((pick) =>
+      accessToken ? hydrateCuratedPick(accessToken, pick) : hydratePublicArtworkForPick(pick)
+    )
+  );
+
+  return buildCuratedFeed(vibe, selectFreshPicks(hydratedCurated, excludedIds, 5, rotation));
+}
+
 function buildSignalDrivenPicks(
   activeVibe: JazzPick["vibeTags"][number],
   topArtists: SpotifyArtistEntity[],
@@ -298,6 +321,92 @@ function buildSignalDrivenPicks(
   );
 }
 
+async function loadListenerData(accessToken: string): Promise<ListenerData> {
+  const [topArtists, topTracks, recentlyPlayed, savedTracks] = await Promise.all([
+    getTopArtists(accessToken),
+    getTopTracks(accessToken),
+    getRecentlyPlayed(accessToken),
+    getSavedTracks(accessToken)
+  ]);
+
+  return {
+    topArtists,
+    topTracks,
+    recentlyPlayed,
+    savedTracks,
+    tasteProfile: buildTasteProfile(topArtists, topTracks, recentlyPlayed, savedTracks)
+  };
+}
+
+async function buildFeedForVibe(params: {
+  vibe: Vibe;
+  excludedIds: Set<string>;
+  rotation: number;
+  accessToken?: string | null;
+  listenerData?: ListenerData | null;
+}): Promise<RecommendationFeed> {
+  const { vibe, excludedIds, rotation, accessToken, listenerData } = params;
+
+  if (!accessToken || !listenerData) {
+    return buildCuratedResponseForVibe(vibe, excludedIds, rotation, null);
+  }
+
+  const { topArtists, topTracks, recentlyPlayed, savedTracks, tasteProfile } = listenerData;
+
+  const seedArtists = selectSeedArtistsForVibe(vibe, topArtists).filter(
+    (artist) => isJazzAdjacentArtist(artist) || matchesCuratedJazzArtist(artist.name)
+  );
+
+  const excludedAlbumIds = new Set([
+    ...topTracks.map((track) => track.album.id),
+    ...recentlyPlayed.map((track) => track.album.id),
+    ...savedTracks.map((track) => track.album.id)
+  ]);
+
+  const searchedPicks = await buildSearchDrivenPicks(
+    accessToken,
+    vibe,
+    seedArtists,
+    excludedAlbumIds,
+    tasteProfile
+  );
+  const signalPicks = buildSignalDrivenPicks(
+    vibe,
+    topArtists,
+    topTracks,
+    recentlyPlayed,
+    savedTracks,
+    tasteProfile
+  );
+  const strongPersonalizedPicks = [...searchedPicks, ...signalPicks].filter((pick) =>
+    isStrongFlavorMatch(pick, vibe)
+  );
+  const personalizedPicks = selectFreshPicks(
+    rankPicksForVibe(strongPersonalizedPicks, vibe, 12),
+    excludedIds,
+    5,
+    rotation
+  );
+
+  if (personalizedPicks.length >= 3) {
+    const seedNames = Array.from(
+      new Set(personalizedPicks.map((pick) => pick.seedArtist).filter(Boolean))
+    ).slice(0, 3);
+
+    return {
+      mode: "personalized",
+      headline: "順著你最近的耳朵走",
+      note:
+        seedNames.length > 0
+          ? `這一輪順著 ${seedNames.join("、")} 附近的氣味往外展開，先替你留幾張更貼近 ${vibe} 的專輯。`
+          : `先照著你最近的聽感往前推一步，替你留幾張更貼近 ${vibe} 的專輯。`,
+      picks: personalizedPicks
+    };
+  }
+
+  return buildCuratedResponseForVibe(vibe, excludedIds, rotation, accessToken);
+}
+
 export async function GET(request: NextRequest) {
   const vibe = parseVibe(request.nextUrl.searchParams.get("vibe"));
   const excludedIds = new Set(
@@ -308,104 +417,85 @@ export async function GET(request: NextRequest) {
   );
   const rotation = Number.parseInt(request.nextUrl.searchParams.get("rotation") ?? "0", 10) || 0;
   const accessToken = await getValidSpotifyAccessToken();
+  try {
+    const listenerData = accessToken ? await loadListenerData(accessToken) : null;
+    const feed = await buildFeedForVibe({
+      vibe,
+      excludedIds,
+      rotation,
+      accessToken,
+      listenerData
+    });
 
-  if (!accessToken) {
-    const hydratedCurated = await Promise.all(
-      getCuratedPicksForVibe(vibe, { limit: 8, excludeIds: excludedIds, rotation }).map((pick) =>
-        hydratePublicArtworkForPick(pick)
-      )
-    );
+    return NextResponse.json(feed, {
+      headers: { "Cache-Control": "no-store" }
+    });
+  } catch {
+    const feed = await buildCuratedResponseForVibe(vibe, excludedIds, rotation, null);
+    return NextResponse.json(feed, {
+      headers: { "Cache-Control": "no-store" }
+    });
+  }
+}
 
-    return NextResponse.json(buildCuratedFeed(vibe, selectFreshPicks(hydratedCurated, excludedIds, 5, rotation)), {
+export async function POST(request: NextRequest) {
+  const body = (await request.json().catch(() => null)) as
+    | { requests?: RecommendationBatchRequest[] }
+    | null;
+  const requests = (body?.requests ?? [])
+    .filter((entry) => vibeOptions.includes(entry.vibe))
+    .map((entry) => ({
+      vibe: entry.vibe,
+      excludeIds: entry.excludeIds ?? [],
+      rotation: entry.rotation ?? 0
+    }));
+
+  if (requests.length === 0) {
+    return NextResponse.json({ feeds: {} satisfies RecommendationBatchResponse["feeds"] }, {
       headers: { "Cache-Control": "no-store" }
     });
   }
 
+  const accessToken = await getValidSpotifyAccessToken();
+
   try {
-    const [topArtists, topTracks, recentlyPlayed, savedTracks] = await Promise.all([
-      getTopArtists(accessToken),
-      getTopTracks(accessToken),
-      getRecentlyPlayed(accessToken),
-      getSavedTracks(accessToken)
-    ]);
-    const tasteProfile = buildTasteProfile(topArtists, topTracks, recentlyPlayed, savedTracks);
+    const listenerData = accessToken ? await loadListenerData(accessToken) : null;
+    const feeds = Object.fromEntries(
+      await Promise.all(
+        requests.map(async (entry) => {
+          const feed = await buildFeedForVibe({
+            vibe: entry.vibe,
+            excludedIds: new Set(entry.excludeIds),
+            rotation: entry.rotation,
+            accessToken,
+            listenerData
+          });
 
-    const seedArtists = selectSeedArtistsForVibe(vibe, topArtists).filter(
-      (artist) => isJazzAdjacentArtist(artist) || matchesCuratedJazzArtist(artist.name)
-    );
-
-    const excludedAlbumIds = new Set([
-      ...topTracks.map((track) => track.album.id),
-      ...recentlyPlayed.map((track) => track.album.id),
-      ...savedTracks.map((track) => track.album.id)
-    ]);
-
-    const searchedPicks = await buildSearchDrivenPicks(
-      accessToken,
-      vibe,
-      seedArtists,
-      excludedAlbumIds,
-      tasteProfile
-    );
-    const signalPicks = buildSignalDrivenPicks(
-      vibe,
-      topArtists,
-      topTracks,
-      recentlyPlayed,
-      savedTracks,
-      tasteProfile
-    );
-    const strongPersonalizedPicks = [...searchedPicks, ...signalPicks].filter((pick) =>
-      isStrongFlavorMatch(pick, vibe)
-    );
-    const personalizedPicks = selectFreshPicks(
-      rankPicksForVibe(strongPersonalizedPicks, vibe, 12),
-      excludedIds,
-      5,
-      rotation
-    );
-
-    if (personalizedPicks.length >= 3) {
-      const seedNames = Array.from(
-        new Set(personalizedPicks.map((pick) => pick.seedArtist).filter(Boolean))
-      ).slice(0, 3);
-
-      return NextResponse.json(
-        {
-          mode: "personalized",
-          headline: "順著你最近的耳朵走",
-          note:
-            seedNames.length > 0
-              ? `這一輪順著 ${seedNames.join("、")} 附近的氣味往外展開，先替你留幾張更貼近 ${vibe} 的專輯。`
-              : `先照著你最近的聽感往前推一步，替你留幾張更貼近 ${vibe} 的專輯。`,
-          picks: personalizedPicks
-        },
-        {
-          headers: { "Cache-Control": "no-store" }
-        }
-      );
-    }
-
-    const hydratedCurated = await Promise.all(
-      getCuratedPicksForVibe(vibe, { limit: 8, excludeIds: excludedIds, rotation }).map((pick) =>
-        hydrateCuratedPick(accessToken, pick)
+          return [entry.vibe, feed];
+        })
       )
-    );
+    ) as RecommendationBatchResponse["feeds"];
 
-    return NextResponse.json(
-      buildCuratedFeed(vibe, selectFreshPicks(hydratedCurated, excludedIds, 5, rotation)),
-      {
-        headers: { "Cache-Control": "no-store" }
-      }
-    );
+    return NextResponse.json({ feeds }, {
+      headers: { "Cache-Control": "no-store" }
+    });
   } catch {
-    const hydratedCurated = await Promise.all(
-      getCuratedPicksForVibe(vibe, { limit: 8, excludeIds: excludedIds, rotation }).map((pick) =>
-        hydratePublicArtworkForPick(pick)
-      )
-    );
+    const feeds = Object.fromEntries(
+      await Promise.all(
+        requests.map(async (entry) => {
+          const feed = await buildCuratedResponseForVibe(
+            entry.vibe,
+            new Set(entry.excludeIds),
+            entry.rotation,
+            null
+          );
 
-    return NextResponse.json(buildCuratedFeed(vibe, selectFreshPicks(hydratedCurated, excludedIds, 5, rotation)), {
+          return [entry.vibe, feed];
+        })
+      )
+    ) as RecommendationBatchResponse["feeds"];
+
+    return NextResponse.json({ feeds }, {
       headers: { "Cache-Control": "no-store" }
     });
   }

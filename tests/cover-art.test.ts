@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { jazzPicks } from "@/data/jazz-picks";
 import {
   buildItunesArtworkSearchUrl,
+  clearPublicArtworkHydrationCache,
   fetchItunesArtwork,
   hydratePublicArtworkForPick
 } from "@/lib/cover-art";
@@ -33,6 +34,32 @@ const syntheticTrackPick: JazzPick = {
 };
 
 describe("public artwork hydration", () => {
+  it("memoizes repeated hydration calls when using the default fetch path", async () => {
+    clearPublicArtworkHydrationCache();
+    const originalFetch = global.fetch;
+    const fetchMock = vi.fn(async () =>
+      jsonResponse({
+        thumbnail_url: "https://image-cdn.spotify.com/kind-of-blue.jpg"
+      })
+    );
+
+    global.fetch = fetchMock as typeof fetch;
+
+    try {
+      const [first, second] = await Promise.all([
+        hydratePublicArtworkForPick(jazzPicks[0]),
+        hydratePublicArtworkForPick(jazzPicks[0])
+      ]);
+
+      expect(first.imageUrl).toBe("https://image-cdn.spotify.com/kind-of-blue.jpg");
+      expect(second.imageUrl).toBe("https://image-cdn.spotify.com/kind-of-blue.jpg");
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    } finally {
+      global.fetch = originalFetch;
+      clearPublicArtworkHydrationCache();
+    }
+  });
+
   it("builds catalog-specific iTunes search urls for albums and tracks", () => {
     const albumPick = jazzPicks.find((pick) => pick.type === "album");
     const trackPick = syntheticTrackPick;

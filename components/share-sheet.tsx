@@ -6,15 +6,9 @@ type ShareSheetProps = {
   pick: JazzPick | null;
   onClose: () => void;
   onShareTextLink: (pick: JazzPick) => void;
-  onShareImage: (pick: JazzPick) => void;
 };
 
-export function ShareSheet({
-  pick,
-  onClose,
-  onShareTextLink,
-  onShareImage
-}: ShareSheetProps) {
+export function ShareSheet({ pick, onClose, onShareTextLink }: ShareSheetProps) {
   if (!pick) {
     return null;
   }
@@ -33,7 +27,7 @@ export function ShareSheet({
       >
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-xs uppercase tracking-[0.24em] text-mist/80">分享這張</p>
+            <p className="text-xs uppercase tracking-[0.24em] text-mist/80">分享這一刻</p>
             <h3 id="share-sheet-title" className="mt-2 font-display text-3xl text-cream">
               {pick.title}
             </h3>
@@ -48,20 +42,13 @@ export function ShareSheet({
           </button>
         </div>
 
-        <div className="mt-6 grid gap-3 sm:grid-cols-2">
+        <div className="mt-6">
           <button
             type="button"
             onClick={() => onShareTextLink(pick)}
-            className="rounded-[20px] border border-white/10 bg-white/[0.04] px-4 py-4 text-left transition hover:border-white/20 hover:bg-white/[0.08]"
+            className="w-full rounded-[20px] border border-white/10 bg-white/[0.04] px-4 py-4 text-left transition hover:border-white/20 hover:bg-white/[0.08]"
           >
-            <p className="text-sm font-medium text-cream">文字＋連結</p>
-          </button>
-          <button
-            type="button"
-            onClick={() => onShareImage(pick)}
-            className="rounded-[20px] border border-white/10 bg-white/[0.04] px-4 py-4 text-left transition hover:border-white/20 hover:bg-white/[0.08]"
-          >
-            <p className="text-sm font-medium text-cream">圖片分享</p>
+            <p className="text-sm font-medium text-cream">分享這張專輯</p>
           </button>
         </div>
       </div>

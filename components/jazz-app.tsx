@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { RecommendationCard } from "@/components/recommendation-card";
 import { SavedPicks } from "@/components/saved-picks";
 import { ShareSheet } from "@/components/share-sheet";
@@ -17,15 +17,49 @@ import {
 import { buildCuratedFeed } from "@/lib/spotify-recommendations";
 import {
   buildPickSharePayload,
-  buildShareImagePayload,
-  buildShareImageUrl,
   copyShareText,
-  sharePick,
-  sharePickImage
+  sharePick
 } from "@/lib/share";
-import { JazzPick, RecommendationFeed, SpotifySession, ToastMessage, Vibe } from "@/types/jazz";
+import {
+  JazzPick,
+  RecommendationBatchRequest,
+  RecommendationBatchResponse,
+  RecommendationFeed,
+  SpotifySession,
+  ToastMessage,
+  vibeOptions,
+  Vibe
+} from "@/types/jazz";
 
 const defaultVibe: Vibe = "Classic";
+
+function buildFallbackFeedMap(savedIds: Set<string>) {
+  return Object.fromEntries(
+    vibeOptions.map((vibe) => {
+      const excludeIds = new Set([...savedIds, ...getRecentRecommendationIds(vibe)]);
+      const rotation = getRecommendationRotation(vibe);
+
+      return [
+        vibe,
+        buildCuratedFeed(
+          vibe,
+          getCuratedPicksForVibe(vibe, {
+            excludeIds,
+            rotation
+          })
+        )
+      ];
+    })
+  ) as Record<Vibe, RecommendationFeed>;
+}
+
+function buildRecommendationRequest(savedIds: Set<string>, vibe: Vibe): RecommendationBatchRequest {
+  return {
+    vibe,
+    excludeIds: Array.from(new Set([...savedIds, ...getRecentRecommendationIds(vibe)])),
+    rotation: getRecommendationRotation(vibe)
+  };
+}
 
 export function JazzApp() {
   const [activeVibe, setActiveVibe] = useState<Vibe>(defaultVibe);
@@ -38,10 +72,12 @@ export function JazzApp() {
   });
   const [isLoadingSpotify, setIsLoadingSpotify] = useState(true);
   const [shareTarget, setShareTarget] = useState<JazzPick | null>(null);
-  const [feed, setFeed] = useState<RecommendationFeed>({
-    ...buildCuratedFeed(defaultVibe, getCuratedPicksForVibe(defaultVibe))
-  });
+  const [feedByVibe, setFeedByVibe] = useState<Record<Vibe, RecommendationFeed>>(() =>
+    buildFallbackFeedMap(new Set<string>())
+  );
+  const [hydratedVibes, setHydratedVibes] = useState<Partial<Record<Vibe, true>>>({});
   const [isLoadingFeed, setIsLoadingFeed] = useState(true);
+  const viewedVibesRef = useRef<Set<Vibe>>(new Set());
 
   useEffect(() => {
     setSavedPicks(getSavedPicks());
@@ -82,6 +118,7 @@ export function JazzApp() {
   }, []);
 
   const savedIds = useMemo(() => new Set(savedPicks.map((pick) => pick.id)), [savedPicks]);
+  const feed = feedByVibe[activeVibe] ?? buildCuratedFeed(activeVibe, getCuratedPicksForVibe(activeVibe));
 
   function pushToast(text: string) {
     const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -114,26 +151,57 @@ export function JazzApp() {
   }, []);
 
   useEffect(() => {
-    let ignore = false;
-
     if (!isReady) {
       return;
     }
 
-    async function loadRecommendations() {
-      setIsLoadingFeed(true);
-      const excludeIds = Array.from(
-        new Set([...savedIds, ...getRecentRecommendationIds(activeVibe)])
-      );
-      const rotation = getRecommendationRotation(activeVibe);
+    setFeedByVibe(buildFallbackFeedMap(savedIds));
+    setHydratedVibes({});
+    viewedVibesRef.current = new Set();
+    setIsLoadingFeed(false);
+  }, [isReady, spotifySession.connected, savedIds]);
+
+  useEffect(() => {
+    if (!isReady || viewedVibesRef.current.has(activeVibe)) {
+      return;
+    }
+
+    const currentFeed = feedByVibe[activeVibe];
+    if (!currentFeed || currentFeed.picks.length === 0) {
+      return;
+    }
+
+    rememberRecommendationIds(
+      activeVibe,
+      currentFeed.picks.map((pick) => pick.id)
+    );
+    viewedVibesRef.current.add(activeVibe);
+  }, [activeVibe, feedByVibe, isReady]);
+
+  useEffect(() => {
+    let ignore = false;
+    const controller = new AbortController();
+
+    if (!isReady || hydratedVibes[activeVibe]) {
+      return;
+    }
+
+    async function loadActiveVibeFeed() {
+      if (spotifySession.connected) {
+        setIsLoadingFeed(true);
+      }
+      const request = buildRecommendationRequest(savedIds, activeVibe);
+      const query = new URLSearchParams({
+        vibe: request.vibe,
+        exclude: request.excludeIds.join(","),
+        rotation: String(request.rotation)
+      });
 
       try {
-        const response = await fetch(
-          `/api/jazz/recommendations?vibe=${encodeURIComponent(activeVibe)}&exclude=${encodeURIComponent(excludeIds.join(","))}&rotation=${rotation}`,
-          {
-            cache: "no-store"
-          }
-        );
+        const response = await fetch(`/api/jazz/recommendations?${query.toString()}`, {
+          cache: "no-store",
+          signal: controller.signal
+        });
 
         if (!response.ok) {
           throw new Error("Failed to load recommendations.");
@@ -141,40 +209,101 @@ export function JazzApp() {
 
         const nextFeed = (await response.json()) as RecommendationFeed;
         if (!ignore) {
-          setFeed(nextFeed);
-          rememberRecommendationIds(
-            activeVibe,
-            nextFeed.picks.map((pick) => pick.id)
-          );
+          setFeedByVibe((current) => ({
+            ...current,
+            [activeVibe]: nextFeed
+          }));
+          setHydratedVibes((current) => ({
+            ...current,
+            [activeVibe]: true
+          }));
         }
-      } catch {
-        if (!ignore) {
-          const fallbackFeed = buildCuratedFeed(
-            activeVibe,
-            getCuratedPicksForVibe(activeVibe, {
-              excludeIds: new Set(excludeIds),
-              rotation
-            })
-          );
-          setFeed(fallbackFeed);
-          rememberRecommendationIds(
-            activeVibe,
-            fallbackFeed.picks.map((pick) => pick.id)
-          );
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") {
+          return;
         }
       } finally {
-        if (!ignore) {
+        if (!ignore && spotifySession.connected) {
           setIsLoadingFeed(false);
         }
       }
     }
 
-    void loadRecommendations();
+    void loadActiveVibeFeed();
 
     return () => {
       ignore = true;
+      controller.abort();
     };
-  }, [activeVibe, isReady, spotifySession.connected, savedIds]);
+  }, [activeVibe, hydratedVibes, isReady, savedIds, spotifySession.connected]);
+
+  useEffect(() => {
+    let cancelled = false;
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+    let idleId: number | undefined;
+
+    if (!isReady || !hydratedVibes[activeVibe]) {
+      return;
+    }
+
+    const pendingVibes = vibeOptions.filter((vibe) => vibe !== activeVibe && !hydratedVibes[vibe]);
+    if (pendingVibes.length === 0) {
+      return;
+    }
+
+    const runPrefetch = async () => {
+      const requests = pendingVibes.map((vibe) => buildRecommendationRequest(savedIds, vibe));
+
+      try {
+        const response = await fetch("/api/jazz/recommendations", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          cache: "no-store",
+          body: JSON.stringify({ requests })
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to prefetch recommendations.");
+        }
+
+        const payload = (await response.json()) as RecommendationBatchResponse;
+        if (!cancelled) {
+          setFeedByVibe((current) => ({
+            ...current,
+            ...payload.feeds
+          }));
+          setHydratedVibes((current) => ({
+            ...current,
+            ...Object.fromEntries(pendingVibes.map((vibe) => [vibe, true]))
+          }));
+        }
+      } catch {
+        return;
+      }
+    };
+
+    if ("requestIdleCallback" in window) {
+      idleId = window.requestIdleCallback(() => {
+        void runPrefetch();
+      });
+    } else {
+      timeoutId = setTimeout(() => {
+        void runPrefetch();
+      }, 350);
+    }
+
+    return () => {
+      cancelled = true;
+      if (typeof idleId === "number" && "cancelIdleCallback" in window) {
+        window.cancelIdleCallback(idleId);
+      }
+      if (typeof timeoutId !== "undefined") {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [activeVibe, hydratedVibes, isReady, savedIds, spotifySession.connected]);
 
   function handleToggleSave(pick: JazzPick) {
     setSavedPicks((current) => {
@@ -184,32 +313,6 @@ export function JazzApp() {
       pushToast(exists ? "已從收藏移除。" : "已加入收藏。");
       return nextPicks;
     });
-  }
-
-  async function handleNativeShare(pick: JazzPick) {
-    try {
-      const result = await sharePick(buildPickSharePayload(pick));
-
-      if (result.status === "shared") {
-        pushToast("已送出分享。");
-        setShareTarget(null);
-        return;
-      }
-
-      if (result.status === "copied") {
-        pushToast("連結已複製。");
-        setShareTarget(null);
-        return;
-      }
-
-      pushToast("這個裝置目前無法直接分享。");
-    } catch (error) {
-      if (error instanceof DOMException && error.name === "AbortError") {
-        return;
-      }
-
-      pushToast("分享已取消。");
-    }
   }
 
   function handleShare(pick: JazzPick) {
@@ -227,25 +330,6 @@ export function JazzApp() {
     } else {
       const copied = await copyShareText(payload);
       pushToast(copied.status === "copied" ? "文字與連結已複製。" : "目前無法分享。");
-    }
-
-    setShareTarget(null);
-  }
-
-  async function handleShareImage(pick: JazzPick) {
-    const imageUrl = buildShareImageUrl(buildShareImagePayload(pick), window.location.origin);
-    const result = await sharePickImage({
-      title: `${pick.title} · ${pick.artist}`,
-      text: pick.recommendationReason,
-      imageUrl
-    });
-
-    if (result.status === "shared") {
-      pushToast("已開啟圖片分享。");
-    } else if (result.status === "downloaded") {
-      pushToast("圖片已下載。");
-    } else {
-      pushToast("目前無法分享圖片。");
     }
 
     setShareTarget(null);
@@ -283,7 +367,6 @@ export function JazzApp() {
         pick={shareTarget}
         onClose={() => setShareTarget(null)}
         onShareTextLink={handleShareTextLink}
-        onShareImage={handleShareImage}
       />
       <main className="relative overflow-hidden">
         <div className="ambient ambient-left" />
@@ -297,13 +380,10 @@ export function JazzApp() {
               <div className="max-w-3xl space-y-5">
                 <p className="text-sm uppercase tracking-[0.3em] text-mist/80">Today&apos;s Jazz Picks</p>
                 <h1 className="font-display text-5xl leading-none text-cream sm:text-6xl lg:text-7xl">
-                  少花點時間選。
-                  <br />
-                  多留點時間聽。
+                  今天，先從這張開始。
                 </h1>
                 <p className="max-w-2xl text-base leading-7 text-mist sm:text-lg">
-                  給每天打開 Spotify，卻不想把心情耗在選擇上的爵士樂迷。
-                  先替你留好幾張此刻值得播放的專輯。
+                  先替你收好幾張專輯，讓今天不用從茫茫片海開始。
                 </p>
               </div>
               <VibeFilter activeVibe={activeVibe} onChange={setActiveVibe} />
@@ -314,15 +394,15 @@ export function JazzApp() {
               <p className="mt-3 font-display text-3xl text-cream">{activeVibe}</p>
               <p className="mt-4 text-sm leading-7 text-mist">
                 {activeVibe === "Classic" &&
-                  "從穩妥的名盤開始，讓今天第一個選擇自然落下。"}
+                  "先回到那些一放下去，整個房間就會安定下來的名盤。"}
                 {activeVibe === "Exploratory" &&
-                  "在熟悉的語彙之外再多走幾步，留一點空間給新的驚喜。"}
+                  "從熟悉的入口偏一點航線，去聽爵士更野、更開的那一面。"}
                 {activeVibe === "Fusion" &&
-                  "當你想把節奏聽得更黏、更有電流感，這裡會更對味。"}
+                  "把律動再推深一點，去接住電氣、速度和更鮮明的輪廓。"}
                 {activeVibe === "Late Night" &&
-                  "適合夜裡播放的選擇，輪廓柔和，但情緒依然飽滿。"}
+                  "適合夜深之後播放，聲音不急，情緒卻留得很長。"}
                 {activeVibe === "Focus" &&
-                  "節奏還在，情緒也在，只先把多餘的干擾收乾淨。"}
+                  "把多餘的噪音先收掉，只留下能陪你往前走的節奏。"}
               </p>
               <div className="mt-8 flex items-center justify-between text-sm text-mist">
                 <span>已備好 {feed.picks.length} 張</span>
@@ -342,15 +422,15 @@ export function JazzApp() {
                         </p>
                         <p className="mt-1 text-sm text-mist">
                           {spotifySession.product
-                            ? `已開始參考你的 ${spotifySession.product} 帳號聆聽紀錄調整推薦。`
-                            : "已開始參考你的聆聽紀錄調整推薦。"}
+                            ? `已開始按你的 ${spotifySession.product} 聆聽習慣微調今天的選片。`
+                            : "已開始按你的聆聽習慣微調今天的選片。"}
                         </p>
                       </>
                     ) : (
                       <>
                         <p className="mt-2 text-lg text-cream">連接 Spotify</p>
                         <p className="mt-1 text-sm text-mist">
-                          連上帳號之後，推薦會慢慢讀懂你最近常聽、收藏與反覆播放的線索。
+                          連上帳號後，推薦會更貼近你真正常聽的聲音。
                         </p>
                       </>
                     )}
@@ -446,7 +526,7 @@ export function JazzApp() {
                   收藏
                 </h2>
                 <p className="mt-2 text-sm leading-6 text-mist">
-                  把想晚點回來、或值得再播一次的聲音先留在這裡。
+                  把想回頭再聽的那張，先留在這裡。
                 </p>
               </div>
               {isReady ? (

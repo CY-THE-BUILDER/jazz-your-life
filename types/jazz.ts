@@ -48,3 +48,13 @@ export type RecommendationFeed = {
   note: string;
   picks: JazzPick[];
 };
+
+export type RecommendationBatchRequest = {
+  vibe: Vibe;
+  excludeIds: string[];
+  rotation: number;
+};
+
+export type RecommendationBatchResponse = {
+  feeds: Partial<Record<Vibe, RecommendationFeed>>;
+};
