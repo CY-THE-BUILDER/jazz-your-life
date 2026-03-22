@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import type { Prisma } from "@prisma/client";
 import { adminLoginAction, adminLogoutAction, updateNavigationAction, updateProjectAction, updateSectionLocaleAction } from "@/app/admin/actions";
 import { isAdminAuthenticated, isAdminConfigured } from "@/lib/admin-auth";
 import { getPrismaClient } from "@/lib/prisma";
@@ -12,27 +11,6 @@ export const metadata: Metadata = {
     follow: false
   }
 };
-
-type NavigationItemRecord = Prisma.NavigationItemGetPayload<Record<string, never>>;
-type PageRecord = Prisma.PageGetPayload<{
-  include: {
-    sections: {
-      include: {
-        locales: true;
-      };
-    };
-  };
-}>;
-type ProjectRecord = Prisma.ProjectGetPayload<{
-  include: {
-    locales: true;
-    tags: {
-      include: {
-        tag: true;
-      };
-    };
-  };
-}>;
 const adminLocales = ["zh_Hant", "en"] as const;
 
 async function getAdminData() {
@@ -94,6 +72,11 @@ async function getAdminData() {
     projects
   };
 }
+
+type AdminData = NonNullable<Awaited<ReturnType<typeof getAdminData>>>;
+type NavigationItemRecord = AdminData["navigation"][number];
+type PageRecord = AdminData["pages"][number];
+type ProjectRecord = AdminData["projects"][number];
 
 export default async function AdminPage({
   searchParams
