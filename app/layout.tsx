@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { PwaRefresh } from "@/components/pwa-refresh";
 import { getCanonicalSiteUrl } from "@/lib/site-url";
 import "./globals.css";
 
@@ -37,7 +38,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-Hant">
-      <body>{children}</body>
+      <body>
+        <PwaRefresh />
+        {children}
+      </body>
     </html>
   );
 }
