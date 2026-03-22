@@ -1,5 +1,10 @@
-import { JazzApp } from "@/components/jazz-app";
+import { headers } from "next/headers";
+import { NoesisLanding } from "@/components/noesis-landing";
+import { inferLocaleFromHeader } from "@/data/noesis-brand";
 
-export default function HomePage() {
-  return <JazzApp />;
+export default async function HomePage() {
+  const acceptLanguage = headers().get("accept-language");
+  const locale = inferLocaleFromHeader(acceptLanguage);
+
+  return <NoesisLanding locale={locale} />;
 }
