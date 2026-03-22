@@ -48,15 +48,18 @@ type PrincipleCard = {
   body: string;
 };
 
+type SectionMap = Record<string, LocalizedSection>;
+type EssaysSectionEntry = [string, LocalizedSection];
+
 function buildFallbackNav(locale: Locale): NavItem[] {
-  return siteNav.map((item) => ({
+  return siteNav.map((item: (typeof siteNav)[number]) => ({
     href: item.href,
     label: getLocalizedText(item.label, locale)
   }));
 }
 
 function buildFallbackProjects(locale: Locale): ProjectCard[] {
-  return featuredProjects.map((project) => ({
+  return featuredProjects.map((project: (typeof featuredProjects)[number]) => ({
     slug: project.slug,
     href: project.href,
     status: project.status,
@@ -68,7 +71,7 @@ function buildFallbackProjects(locale: Locale): ProjectCard[] {
 }
 
 function buildFallbackEssays(locale: Locale): EssayCard[] {
-  return essays.map((essay) => ({
+  return essays.map((essay: (typeof essays)[number]) => ({
     slug: essay.slug,
     category: getLocalizedText(essay.category, locale),
     title: getLocalizedText(essay.title, locale),
@@ -77,7 +80,7 @@ function buildFallbackEssays(locale: Locale): EssayCard[] {
 }
 
 function buildFallbackPrinciples(locale: Locale): PrincipleCard[] {
-  return studioPrinciples.map((principle) => ({
+  return studioPrinciples.map((principle: (typeof studioPrinciples)[number]) => ({
     title: getLocalizedText(principle.title, locale),
     body: getLocalizedText(principle.body, locale)
   }));
@@ -115,7 +118,7 @@ async function getPageSectionMap(pageSlug: string, locale: Locale) {
     }
 
     return Object.fromEntries(
-      page.sections.map((section) => {
+      page.sections.map((section: (typeof page.sections)[number]) => {
         const localized = section.locales[0] ?? null;
         return [
           section.key,
@@ -159,7 +162,7 @@ const getProjectsFromDb = cache(async (locale: Locale) => {
       return null;
     }
 
-    return projects.map((project) => {
+    return projects.map((project: (typeof projects)[number]) => {
       const localized = project.locales[0];
       return {
         slug: project.slug,
@@ -167,7 +170,7 @@ const getProjectsFromDb = cache(async (locale: Locale) => {
         status: project.status === "LIVE" ? "live" : "building",
         title: localized?.name ?? project.slug,
         summary: localized?.summary ?? "",
-        tags: project.tags.map((entry) => entry.tag.slug),
+        tags: project.tags.map((entry: (typeof project.tags)[number]) => entry.tag.slug),
         role: localized?.role ?? ""
       } satisfies ProjectCard;
     });
@@ -193,7 +196,7 @@ export const getBrandNavigation = cache(async (locale: Locale) => {
       return buildFallbackNav(locale);
     }
 
-    return items.map((item) => ({
+    return items.map((item: (typeof items)[number]) => ({
       href: item.href,
       label: item.label
     }));
@@ -208,15 +211,15 @@ export const getLandingContent = cache(async (locale: Locale) => {
   const essaysPageSections = await getPageSectionMap("essays", locale);
   const essayCards =
     essaysPageSections
-      ? Object.entries(essaysPageSections)
-          .filter(([key]) => key.startsWith("essay_"))
-          .map(([key, section]) => ({
+      ? Object.entries(essaysPageSections as SectionMap)
+          .filter(([key]: EssaysSectionEntry) => key.startsWith("essay_"))
+          .map(([key, section]: EssaysSectionEntry) => ({
             slug: key,
             category: section.eyebrow ?? "",
             title: section.title ?? "",
             summary: section.body ?? ""
           }))
-          .filter((essay) => essay.title)
+          .filter((essay: EssayCard) => essay.title)
       : buildFallbackEssays(locale);
 
   return {
@@ -251,7 +254,7 @@ export const getLandingContent = cache(async (locale: Locale) => {
     databasePoints: brandNarrative.database.points[locale],
     projects,
     essays: essayCards.length > 0 ? essayCards : buildFallbackEssays(locale),
-    icons: iconConcepts.map((icon) => ({
+    icons: iconConcepts.map((icon: (typeof iconConcepts)[number]) => ({
       id: icon.id,
       assetPath: icon.assetPath,
       title: getLocalizedText(icon.title, locale),
@@ -279,15 +282,15 @@ export const getEssaysPageContent = cache(async (locale: Locale) => {
     };
   }
 
-  const mapped = Object.entries(sections)
-    .filter(([key]) => key.startsWith("essay_"))
-    .map(([key, value]) => ({
+  const mapped = Object.entries(sections as SectionMap)
+    .filter(([key]: EssaysSectionEntry) => key.startsWith("essay_"))
+    .map(([key, value]: EssaysSectionEntry) => ({
       slug: key,
       category: value.eyebrow ?? "",
       title: value.title ?? "",
       summary: value.body ?? ""
     }))
-    .filter((essay) => essay.title);
+    .filter((essay: EssayCard) => essay.title);
 
   return {
     navigation: await getBrandNavigation(locale),
@@ -300,13 +303,13 @@ export const getAboutPageContent = cache(async (locale: Locale) => {
 
   const principles = sections
     ? ["principle_1", "principle_2", "principle_3"]
-        .map((key) => sections[key])
+        .map((key: string) => sections[key])
         .filter(Boolean)
-        .map((entry) => ({
+        .map((entry: LocalizedSection) => ({
           title: entry?.title ?? "",
           body: entry?.body ?? ""
         }))
-        .filter((entry) => entry.title)
+        .filter((entry: PrincipleCard) => entry.title)
     : buildFallbackPrinciples(locale);
 
   return {
