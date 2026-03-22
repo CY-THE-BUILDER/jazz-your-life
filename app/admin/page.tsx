@@ -79,6 +79,7 @@ type PageRecord = AdminData["pages"][number];
 type ProjectRecord = AdminData["projects"][number];
 type SectionLocaleRecord = PageRecord["sections"][number]["locales"][number];
 type ProjectLocaleRecord = ProjectRecord["locales"][number];
+type ProjectTagRecord = ProjectRecord["tags"][number];
 
 export default async function AdminPage({
   searchParams
@@ -267,7 +268,7 @@ export default async function AdminPage({
                     Tags
                     <input
                       className="admin-input"
-                      defaultValue={project.tags.map((entry) => entry.tag.slug).join(", ")}
+                      defaultValue={project.tags.map((entry: ProjectTagRecord) => entry.tag.slug).join(", ")}
                       name="tags"
                     />
                   </label>
