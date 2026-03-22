@@ -9,6 +9,9 @@ export const metadata: Metadata = {
   description: "Philosophy, product writing, and brand essays from Noesis Studio."
 };
 
+type EssaysPageContent = Awaited<ReturnType<typeof getEssaysPageContent>>;
+type EssayCardRecord = EssaysPageContent["essays"][number];
+
 export default async function EssaysPage() {
   const locale = inferLocaleFromHeader(headers().get("accept-language"));
   const isZh = locale === "zh-Hant";
@@ -27,7 +30,7 @@ export default async function EssaysPage() {
       }
     >
       <section className="essay-list">
-        {content.essays.map((essay) => (
+        {content.essays.map((essay: EssayCardRecord) => (
           <article className="essay-card" id={essay.slug} key={essay.slug}>
             <p className="section-eyebrow">{essay.category}</p>
             <h2>{essay.title}</h2>

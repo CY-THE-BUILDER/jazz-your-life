@@ -9,6 +9,9 @@ export const metadata: Metadata = {
   description: "The worldview, design principles, and studio philosophy behind Noesis Studio."
 };
 
+type AboutPageContent = Awaited<ReturnType<typeof getAboutPageContent>>;
+type PrincipleRecord = AboutPageContent["principles"][number];
+
 export default async function AboutPage() {
   const locale = inferLocaleFromHeader(headers().get("accept-language"));
   const isZh = locale === "zh-Hant";
@@ -23,7 +26,7 @@ export default async function AboutPage() {
       description={content.intro.body}
     >
       <section className="narrative-grid">
-        {content.principles.map((principle) => (
+        {content.principles.map((principle: PrincipleRecord) => (
           <article className="narrative-card" key={principle.title}>
             <h2>{principle.title}</h2>
             <p>{principle.body}</p>

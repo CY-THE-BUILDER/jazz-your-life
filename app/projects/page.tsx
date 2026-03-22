@@ -9,6 +9,9 @@ export const metadata: Metadata = {
   description: "Projects, products, and studio experiments built under Noesis Studio."
 };
 
+type ProjectsPageContent = Awaited<ReturnType<typeof getProjectsPageContent>>;
+type ProjectCardRecord = ProjectsPageContent["projects"][number];
+
 export default async function ProjectsPage() {
   const locale = inferLocaleFromHeader(headers().get("accept-language"));
   const isZh = locale === "zh-Hant";
@@ -27,7 +30,7 @@ export default async function ProjectsPage() {
       }
     >
       <section className="project-grid standalone-grid">
-        {content.projects.map((project) => (
+        {content.projects.map((project: ProjectCardRecord) => (
           <a className="project-card" href={project.href} key={project.slug}>
             <div className="project-meta">
               <span>{project.role}</span>
