@@ -1,6 +1,6 @@
 {
-  "name": "jazz-your-life",
-  "short_name": "jazz-your-life",
+  "name": "Vanguard",
+  "short_name": "Vanguard",
   "description": "A calm daily jazz companion for Spotify listeners who want to start with the right record.",
   "start_url": "/",
   "display": "standalone",

@@ -6,14 +6,14 @@ import "./globals.css";
 const siteUrl = getCanonicalSiteUrl();
 
 export const metadata: Metadata = {
-  title: "jazz-your-life",
+  title: "Vanguard",
   description: "A calm daily jazz companion for Spotify listeners who want to start with the right record.",
   metadataBase: new URL(siteUrl),
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "jazz-your-life"
+    title: "Vanguard"
   },
   formatDetection: {
     telephone: false

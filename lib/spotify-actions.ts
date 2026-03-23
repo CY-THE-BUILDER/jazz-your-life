@@ -6,7 +6,7 @@ const mobilePattern =
 function withCampaign(url: string) {
   const parsed = new URL(url);
   if (!parsed.searchParams.has("utm_campaign")) {
-    parsed.searchParams.set("utm_campaign", "jazz-your-life");
+    parsed.searchParams.set("utm_campaign", "vanguard");
   }
 
   return parsed.toString();
@@ -44,13 +44,13 @@ export function getSpotifyActionUrl(
   }
 
   if (/android/i.test(userAgent)) {
-    return `https://spotify.link/content_linking?~campaign=jazz-your-life-web&$deeplink_path=${encodeURIComponent(
+    return `https://spotify.link/content_linking?~campaign=vanguard-web&$deeplink_path=${encodeURIComponent(
       `spotify:${entity.type}:${entity.id}`
     )}&$fallback_url=${encodeURIComponent(canonicalUrl)}`;
   }
 
   if (/iphone|ipad|ipod/i.test(userAgent)) {
-    return `https://spotify.link/content_linking?~campaign=jazz-your-life-web&$canonical_url=${encodeURIComponent(
+    return `https://spotify.link/content_linking?~campaign=vanguard-web&$canonical_url=${encodeURIComponent(
       canonicalUrl
     )}`;
   }

@@ -466,7 +466,7 @@ export function JazzApp() {
           <header className="grid gap-10 lg:grid-cols-[minmax(0,1.1fr)_360px] lg:items-end">
             <div className="space-y-6">
               <div className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.04] px-4 py-1.5 text-xs uppercase tracking-[0.26em] text-mist">
-                jazz-your-life
+                Vanguard
               </div>
               <div className="max-w-3xl space-y-5">
                 <p className="text-sm uppercase tracking-[0.3em] text-mist/80">Today&apos;s Jazz Picks</p>
@@ -636,6 +636,10 @@ export function JazzApp() {
 
             <SavedPicks picks={savedPicks} onToggleSave={handleToggleSave} onShare={handleShare} />
           </section>
+
+          <footer className="border-t border-white/8 pt-6 text-center text-xs uppercase tracking-[0.22em] text-mist/70">
+            © {new Date().getFullYear()} noesis.studio
+          </footer>
         </section>
       </main>
     </>

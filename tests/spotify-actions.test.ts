@@ -13,7 +13,7 @@ describe("spotify action urls", () => {
         },
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"
       )
-    ).toBe("https://open.spotify.com/album/album1?utm_campaign=jazz-your-life");
+    ).toBe("https://open.spotify.com/album/album1?utm_campaign=vanguard");
     expect(getSpotifyNavigationTarget("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)")).toBe(
       "_blank"
     );
@@ -27,9 +27,7 @@ describe("spotify action urls", () => {
         },
         "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)"
       )
-    ).toContain(
-      "https://spotify.link/content_linking?~campaign=jazz-your-life-web&$canonical_url="
-    );
+    ).toContain("https://spotify.link/content_linking?~campaign=vanguard-web&$canonical_url=");
     expect(getSpotifyNavigationTarget("Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)")).toBe(
       "_self"
     );
@@ -43,7 +41,7 @@ describe("spotify action urls", () => {
       "Mozilla/5.0 (Linux; Android 14; Pixel 9)"
     );
 
-    expect(url).toContain("https://spotify.link/content_linking?~campaign=jazz-your-life-web");
+    expect(url).toContain("https://spotify.link/content_linking?~campaign=vanguard-web");
     expect(url).toContain("$fallback_url=");
     expect(url).toContain("spotify%3Aalbum%3Aalbum1");
   });

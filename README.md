@@ -1,23 +1,23 @@
-# jazz-your-life
+# Vanguard
 
-每天替你先收好幾張值得按下播放的爵士選擇。
+Vanguard is a daily jazz recommendation app built for listeners who want a strong first record without disappearing into the Spotify maze.
 
-`jazz-your-life` 是一個為 Spotify 重度爵士樂愛好者打造的每日推薦 Web App。它會用最短的點擊路徑，先給你今天可以從哪裡開始聽；連接 Spotify 後，也會根據最近的常聽、收藏與播放紀錄，調整推薦方向。
+It starts with a curated shelf, then leans into Spotify signals when the user connects an account. The goal is simple: open the app, feel a clear direction, and move into the right album quickly.
 
-Live URL: [https://www.noesis.studio](https://www.noesis.studio)
+Production URL: [https://vanguard.noesis.studio](https://vanguard.noesis.studio)
 
-## Product Highlights
+## What It Does
 
-- 每日爵士推薦首頁，支援 `Classic`、`Exploratory`、`Fusion`、`Late Night`、`Focus`
-- 一鍵前往 Spotify 播放
-- 支援分享與本地收藏
-- Spotify OAuth with PKCE
-- 根據 Spotify 聆聽訊號產生個人化推薦
-- 未登入時也會用公開資料源補齊真實專輯封面，而不是只顯示預設圖
+- Serves five listening directions: `Classic`, `Exploratory`, `Fusion`, `Late Night`, and `Focus`
+- Rotates recommendation shelves to keep each visit feeling fresh
+- Hands off directly to Spotify playback
+- Supports saving and sharing albums
+- Connects to Spotify with OAuth PKCE for listener-aware recommendations
+- Falls back gracefully to public artwork and curated shelves when Spotify is not connected
 
 ## Local Development
 
-1. Load Node via `nvm`:
+1. Load Node with `nvm`:
 
    ```bash
    export NVM_DIR="$HOME/.nvm"
@@ -31,22 +31,22 @@ Live URL: [https://www.noesis.studio](https://www.noesis.studio)
    npm install
    ```
 
-3. Create your environment file:
+3. Create a local env file:
 
    ```bash
    cp .env.example .env.local
    ```
 
-4. In the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard), create an app and add these redirect URIs:
+4. In the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard), create an app and allow these redirect URIs:
 
    ```text
    http://127.0.0.1:3000/api/spotify/callback
-   https://www.noesis.studio/api/spotify/callback
+   https://vanguard.noesis.studio/api/spotify/callback
    ```
 
-5. Fill in `SPOTIFY_CLIENT_ID` in `.env.local`.
-6. Set `SITE_URL=https://www.noesis.studio` in `.env.local` if you want local metadata and OAuth redirects to match production.
-7. Start the dev server:
+5. Set `SPOTIFY_CLIENT_ID` in `.env.local`.
+6. Set `SITE_URL=https://vanguard.noesis.studio` in `.env.local` if you want local metadata and OAuth redirects to mirror production.
+7. Start the app:
 
    ```bash
    npm run dev
@@ -62,20 +62,19 @@ npm run lint
 npm run build
 ```
 
-## Deploy To Vercel
+## Deployment
 
-1. Push this repository to GitHub.
-2. Import the GitHub repo into Vercel as `jazz-your-life`.
-3. Use the default Next.js build settings.
-4. Add `SPOTIFY_CLIENT_ID` to production env.
-5. Add `SITE_URL=https://www.noesis.studio` to production env.
-6. Make sure Spotify Dashboard also allowlists:
+1. Push the repository to GitHub.
+2. Import the repo into Vercel as `vanguard`.
+3. Add `SPOTIFY_CLIENT_ID` to production environment variables.
+4. Add `SITE_URL=https://vanguard.noesis.studio` to production environment variables.
+5. In Spotify Dashboard, make sure this callback is allowlisted:
 
    ```text
-   https://www.noesis.studio/api/spotify/callback
+   https://vanguard.noesis.studio/api/spotify/callback
    ```
 
-7. Redeploy after each push.
+6. Redeploy after each production change.
 
 ## Stack
 

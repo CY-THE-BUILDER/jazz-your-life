@@ -1,4 +1,4 @@
-const DEFAULT_SITE_URL = "https://www.noesis.studio";
+const DEFAULT_SITE_URL = "https://vanguard.noesis.studio";
 
 function trimTrailingSlash(value: string) {
   return value.replace(/\/+$/, "");

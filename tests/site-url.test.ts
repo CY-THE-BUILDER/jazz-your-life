@@ -6,14 +6,14 @@ describe("site url helpers", () => {
     vi.resetModules();
   });
 
-  it("defaults to the noesis canonical site url", async () => {
+  it("defaults to the vanguard canonical site url", async () => {
     const { getCanonicalSiteUrl } = await import("@/lib/site-url");
-    expect(getCanonicalSiteUrl()).toBe("https://www.noesis.studio");
+    expect(getCanonicalSiteUrl()).toBe("https://vanguard.noesis.studio");
   });
 
-  it("maps the root domain to the canonical www origin", async () => {
+  it("maps the root domain to the vanguard origin", async () => {
     const { getCanonicalOrigin } = await import("@/lib/site-url");
-    expect(getCanonicalOrigin("https://noesis.studio")).toBe("https://www.noesis.studio");
+    expect(getCanonicalOrigin("https://noesis.studio")).toBe("https://vanguard.noesis.studio");
   });
 
   it("lets explicit site env win", async () => {
