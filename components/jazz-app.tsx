@@ -12,6 +12,7 @@ import { getCuratedPicksForVibe } from "@/data/jazz-picks";
 import { getSavedPicks, savePicks } from "@/lib/jazz-storage";
 import {
   createRecommendationSessionSeed,
+  getGlobalRecommendationIds,
   getRecommendationRotation,
   getRecentRecommendationIds,
   rememberRecommendationIds
@@ -38,31 +39,51 @@ const initialVisiblePicks = 3;
 const fullVisiblePicks = 5;
 
 function buildFallbackFeedMap(savedIds: Set<string>, seed = 0, limit = initialVisiblePicks) {
-  return Object.fromEntries(
-    vibeOptions.map((vibe) => {
-      const excludeIds = new Set([...savedIds, ...getRecentRecommendationIds(vibe)]);
-      const rotation = getRecommendationRotation(vibe);
+  const reservedIds = new Set<string>([...savedIds, ...getGlobalRecommendationIds()]);
+  const feeds = {} as Record<Vibe, RecommendationFeed>;
 
-      return [
-        vibe,
-        buildCuratedFeed(
-          vibe,
-          getCuratedPicksForVibe(vibe, {
-            excludeIds,
-            rotation,
-            seed,
-            limit
-          })
-        )
-      ];
-    })
-  ) as Record<Vibe, RecommendationFeed>;
+  for (const vibe of vibeOptions) {
+    const excludeIds = new Set([...reservedIds, ...getRecentRecommendationIds(vibe)]);
+    const rotation = getRecommendationRotation(vibe);
+    const picks = getCuratedPicksForVibe(vibe, {
+      excludeIds,
+      rotation,
+      seed,
+      limit
+    });
+
+    feeds[vibe] = buildCuratedFeed(vibe, picks);
+    picks.forEach((pick) => {
+      reservedIds.add(pick.id);
+    });
+  }
+
+  return feeds;
 }
 
-function buildRecommendationRequest(savedIds: Set<string>, vibe: Vibe, seed: number, limit: number): RecommendationBatchRequest {
+function getCrossVibeExcludedIds(vibe: Vibe, feedByVibe: Partial<Record<Vibe, RecommendationFeed>>) {
+  return Object.entries(feedByVibe)
+    .filter(([entryVibe]) => entryVibe !== vibe)
+    .flatMap(([, feed]) => feed?.picks.map((pick) => pick.id) ?? []);
+}
+
+function buildRecommendationRequest(
+  savedIds: Set<string>,
+  vibe: Vibe,
+  seed: number,
+  limit: number,
+  feedByVibe: Partial<Record<Vibe, RecommendationFeed>>
+): RecommendationBatchRequest {
   return {
     vibe,
-    excludeIds: Array.from(new Set([...savedIds, ...getRecentRecommendationIds(vibe)])),
+    excludeIds: Array.from(
+      new Set([
+        ...savedIds,
+        ...getGlobalRecommendationIds(),
+        ...getRecentRecommendationIds(vibe),
+        ...getCrossVibeExcludedIds(vibe, feedByVibe)
+      ])
+    ),
     rotation: getRecommendationRotation(vibe),
     seed,
     limit
@@ -202,7 +223,7 @@ export function JazzApp() {
       if (spotifySession.connected) {
         setIsLoadingFeed(true);
       }
-      const request = buildRecommendationRequest(savedIds, activeVibe, sessionSeed, initialVisiblePicks);
+      const request = buildRecommendationRequest(savedIds, activeVibe, sessionSeed, initialVisiblePicks, feedByVibe);
       const query = new URLSearchParams({
         vibe: request.vibe,
         exclude: request.excludeIds.join(","),
@@ -249,7 +270,7 @@ export function JazzApp() {
       ignore = true;
       controller.abort();
     };
-  }, [activeVibe, hydratedVibes, isReady, savedIds, sessionSeed, spotifySession.connected]);
+  }, [activeVibe, feedByVibe, hydratedVibes, isReady, savedIds, sessionSeed, spotifySession.connected]);
 
   useEffect(() => {
     let ignore = false;
@@ -260,7 +281,7 @@ export function JazzApp() {
     }
 
     async function expandActiveVibeFeed() {
-      const request = buildRecommendationRequest(savedIds, activeVibe, sessionSeed, fullVisiblePicks);
+      const request = buildRecommendationRequest(savedIds, activeVibe, sessionSeed, fullVisiblePicks, feedByVibe);
       const query = new URLSearchParams({
         vibe: request.vibe,
         exclude: request.excludeIds.join(","),
@@ -303,7 +324,7 @@ export function JazzApp() {
       ignore = true;
       controller.abort();
     };
-  }, [activeVibe, expandedVibes, hydratedVibes, isReady, savedIds, sessionSeed]);
+  }, [activeVibe, expandedVibes, feedByVibe, hydratedVibes, isReady, savedIds, sessionSeed]);
 
   useEffect(() => {
     let cancelled = false;
@@ -320,7 +341,9 @@ export function JazzApp() {
     }
 
     const runPrefetch = async () => {
-      const requests = pendingVibes.map((vibe) => buildRecommendationRequest(savedIds, vibe, sessionSeed, initialVisiblePicks));
+      const requests = pendingVibes.map((vibe) =>
+        buildRecommendationRequest(savedIds, vibe, sessionSeed, initialVisiblePicks, feedByVibe)
+      );
 
       try {
         const response = await fetch("/api/jazz/recommendations", {
@@ -371,7 +394,7 @@ export function JazzApp() {
         clearTimeout(timeoutId);
       }
     };
-  }, [activeVibe, hydratedVibes, isReady, savedIds, sessionSeed, spotifySession.connected]);
+  }, [activeVibe, feedByVibe, hydratedVibes, isReady, savedIds, sessionSeed, spotifySession.connected]);
 
   function handleToggleSave(pick: JazzPick) {
     setSavedPicks((current) => {

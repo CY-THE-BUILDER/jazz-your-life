@@ -12,6 +12,7 @@ import {
   buildTrackPick,
   isStrongFlavorMatch,
   rankPicksForVibe,
+  rankPicksForVibeWithSeed,
   selectFreshPicks,
   isJazzAdjacentArtist,
   ListenerTasteProfile,
@@ -252,15 +253,17 @@ async function buildCuratedResponseForVibe(
   vibe: Vibe,
   excludedIds: Set<string>,
   rotation: number,
-  accessToken?: string | null
+  accessToken?: string | null,
+  limit = 5,
+  seed = 0
 ) {
   const hydratedCurated = await Promise.all(
-    getCuratedPicksForVibe(vibe, { limit: 8, excludeIds: excludedIds, rotation }).map((pick) =>
+    getCuratedPicksForVibe(vibe, { limit: Math.max(limit + 3, 6), excludeIds: excludedIds, rotation, seed }).map((pick) =>
       accessToken ? hydrateCuratedPick(accessToken, pick) : hydratePublicArtworkForPick(pick)
     )
   );
 
-  return buildCuratedFeed(vibe, selectFreshPicks(hydratedCurated, excludedIds, 5, rotation));
+  return buildCuratedFeed(vibe, selectFreshPicks(hydratedCurated, excludedIds, limit, rotation, seed));
 }
 
 function buildSignalDrivenPicks(
@@ -342,13 +345,15 @@ async function buildFeedForVibe(params: {
   vibe: Vibe;
   excludedIds: Set<string>;
   rotation: number;
+  seed: number;
+  limit: number;
   accessToken?: string | null;
   listenerData?: ListenerData | null;
 }): Promise<RecommendationFeed> {
-  const { vibe, excludedIds, rotation, accessToken, listenerData } = params;
+  const { vibe, excludedIds, rotation, seed, limit, accessToken, listenerData } = params;
 
   if (!accessToken || !listenerData) {
-    return buildCuratedResponseForVibe(vibe, excludedIds, rotation, null);
+    return buildCuratedResponseForVibe(vibe, excludedIds, rotation, null, limit, seed);
   }
 
   const { topArtists, topTracks, recentlyPlayed, savedTracks, tasteProfile } = listenerData;
@@ -382,10 +387,11 @@ async function buildFeedForVibe(params: {
     isStrongFlavorMatch(pick, vibe)
   );
   const personalizedPicks = selectFreshPicks(
-    rankPicksForVibe(strongPersonalizedPicks, vibe, 12),
+    rankPicksForVibeWithSeed(strongPersonalizedPicks, vibe, seed, 12),
     excludedIds,
-    5,
-    rotation
+    limit,
+    rotation,
+    seed
   );
 
   if (personalizedPicks.length >= 3) {
@@ -404,7 +410,7 @@ async function buildFeedForVibe(params: {
     };
   }
 
-  return buildCuratedResponseForVibe(vibe, excludedIds, rotation, accessToken);
+  return buildCuratedResponseForVibe(vibe, excludedIds, rotation, accessToken, limit, seed);
 }
 
 export async function GET(request: NextRequest) {
@@ -416,6 +422,8 @@ export async function GET(request: NextRequest) {
       .filter(Boolean)
   );
   const rotation = Number.parseInt(request.nextUrl.searchParams.get("rotation") ?? "0", 10) || 0;
+  const seed = Number.parseInt(request.nextUrl.searchParams.get("seed") ?? "0", 10) || 0;
+  const limit = Math.max(1, Math.min(8, Number.parseInt(request.nextUrl.searchParams.get("limit") ?? "5", 10) || 5));
   const accessToken = await getValidSpotifyAccessToken();
   try {
     const listenerData = accessToken ? await loadListenerData(accessToken) : null;
@@ -423,6 +431,8 @@ export async function GET(request: NextRequest) {
       vibe,
       excludedIds,
       rotation,
+      seed,
+      limit,
       accessToken,
       listenerData
     });
@@ -447,7 +457,9 @@ export async function POST(request: NextRequest) {
     .map((entry) => ({
       vibe: entry.vibe,
       excludeIds: entry.excludeIds ?? [],
-      rotation: entry.rotation ?? 0
+      rotation: entry.rotation ?? 0,
+      seed: entry.seed ?? 0,
+      limit: entry.limit ?? 5
     }));
 
   if (requests.length === 0) {
@@ -460,40 +472,48 @@ export async function POST(request: NextRequest) {
 
   try {
     const listenerData = accessToken ? await loadListenerData(accessToken) : null;
-    const feeds = Object.fromEntries(
-      await Promise.all(
-        requests.map(async (entry) => {
-          const feed = await buildFeedForVibe({
-            vibe: entry.vibe,
-            excludedIds: new Set(entry.excludeIds),
-            rotation: entry.rotation,
-            accessToken,
-            listenerData
-          });
+    const reservedIds = new Set<string>();
+    const feeds = {} as RecommendationBatchResponse["feeds"];
 
-          return [entry.vibe, feed];
-        })
-      )
-    ) as RecommendationBatchResponse["feeds"];
+    for (const entry of requests) {
+      const feed = await buildFeedForVibe({
+        vibe: entry.vibe,
+        excludedIds: new Set([...entry.excludeIds, ...reservedIds]),
+        rotation: entry.rotation,
+        seed: entry.seed ?? 0,
+        limit: Math.max(1, Math.min(8, entry.limit ?? 5)),
+        accessToken,
+        listenerData
+      });
+
+      feeds[entry.vibe] = feed;
+      feed.picks.forEach((pick) => {
+        reservedIds.add(pick.id);
+      });
+    }
 
     return NextResponse.json({ feeds }, {
       headers: { "Cache-Control": "no-store" }
     });
   } catch {
-    const feeds = Object.fromEntries(
-      await Promise.all(
-        requests.map(async (entry) => {
-          const feed = await buildCuratedResponseForVibe(
-            entry.vibe,
-            new Set(entry.excludeIds),
-            entry.rotation,
-            null
-          );
+    const reservedIds = new Set<string>();
+    const feeds = {} as RecommendationBatchResponse["feeds"];
 
-          return [entry.vibe, feed];
-        })
-      )
-    ) as RecommendationBatchResponse["feeds"];
+    for (const entry of requests) {
+      const feed = await buildCuratedResponseForVibe(
+        entry.vibe,
+        new Set([...entry.excludeIds, ...reservedIds]),
+        entry.rotation,
+        null,
+        Math.max(1, Math.min(8, entry.limit ?? 5)),
+        entry.seed ?? 0
+      );
+
+      feeds[entry.vibe] = feed;
+      feed.picks.forEach((pick) => {
+        reservedIds.add(pick.id);
+      });
+    }
 
     return NextResponse.json({ feeds }, {
       headers: { "Cache-Control": "no-store" }

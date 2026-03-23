@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useState, type MouseEvent } from "react";
 import { VinylSpinner } from "@/components/vinyl-spinner";
 import { buildGeneratedCoverArt } from "@/lib/cover-art";
@@ -24,15 +23,55 @@ export function RecommendationCard({
 }: RecommendationCardProps) {
   const spotifyHref = getSpotifyActionUrl(pick);
   const placeholderImage = pick.placeholderImageUrl || buildGeneratedCoverArt(pick.title, pick.artist, pick.accentColor);
-  const [imageSrc, setImageSrc] = useState(
-    pick.imageUrl || placeholderImage
-  );
-  const [isImageLoading, setIsImageLoading] = useState(true);
+  const actualImage = pick.imageUrl && pick.imageUrl !== placeholderImage ? pick.imageUrl : null;
+  const [imageSrc, setImageSrc] = useState(placeholderImage);
+  const [isImageLoading, setIsImageLoading] = useState(Boolean(actualImage));
 
   useEffect(() => {
-    setImageSrc(pick.imageUrl || placeholderImage);
+    setImageSrc(placeholderImage);
+
+    if (!actualImage) {
+      setIsImageLoading(false);
+      return;
+    }
+
     setIsImageLoading(true);
-  }, [pick.imageUrl, placeholderImage]);
+
+    let ignore = false;
+    const preloader = new window.Image();
+    const timeoutId = window.setTimeout(() => {
+      if (!ignore) {
+        setIsImageLoading(false);
+      }
+    }, prioritizeImage ? 1800 : 2400);
+
+    preloader.onload = () => {
+      if (ignore) {
+        return;
+      }
+
+      window.clearTimeout(timeoutId);
+      setImageSrc(actualImage);
+      setIsImageLoading(false);
+    };
+
+    preloader.onerror = () => {
+      if (ignore) {
+        return;
+      }
+
+      window.clearTimeout(timeoutId);
+      setImageSrc(placeholderImage);
+      setIsImageLoading(false);
+    };
+
+    preloader.src = actualImage;
+
+    return () => {
+      ignore = true;
+      window.clearTimeout(timeoutId);
+    };
+  }, [actualImage, placeholderImage, prioritizeImage]);
 
   function handleOpenSpotify(event: MouseEvent<HTMLAnchorElement>) {
     const actionUrl = getSpotifyActionUrl(pick, navigator.userAgent);
@@ -54,23 +93,15 @@ export function RecommendationCard({
           backgroundSize: "cover"
         }}
       >
-        <Image
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
           src={imageSrc}
           alt={`${pick.title} by ${pick.artist}`}
-          fill
-          unoptimized
-          priority={prioritizeImage}
           loading={prioritizeImage ? "eager" : "lazy"}
-          sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
-          className={`object-cover transition duration-500 group-hover:scale-[1.03] ${
+          fetchPriority={prioritizeImage ? "high" : "auto"}
+          className={`absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.03] ${
             isImageLoading ? "opacity-0" : "opacity-100"
           }`}
-          onLoad={() => {
-            setIsImageLoading(false);
-          }}
-          onError={() => {
-            setImageSrc(placeholderImage);
-          }}
         />
         <div
           className={`absolute inset-0 flex items-center justify-center bg-[#0b1110]/55 backdrop-blur-[2px] transition duration-300 ${

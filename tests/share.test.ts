@@ -26,6 +26,8 @@ describe("share helpers", () => {
     expect(payload.text).toContain("Kind of Blue");
     expect(payload.text).toContain("Miles Davis");
     expect(payload.url).toBe("https://open.spotify.com/album/example");
+    expect(payload.text).not.toContain("Spotify");
+    expect(payload.text).not.toContain("最近");
   });
 
   it("copies text and link together when native share is unavailable", async () => {
@@ -41,7 +43,7 @@ describe("share helpers", () => {
 
     expect(result.status).toBe("copied");
     expect(writeText).toHaveBeenCalledWith(
-      "Kind of Blue · Miles Davis\n今天想把《Kind of Blue》留給你。Miles Davis，把房間的光線降下來，這張會用極少的音符把空氣拉得很深。\nhttps://open.spotify.com/album/example"
+      "Kind of Blue · Miles Davis\n今天想把《Kind of Blue》留給你。Miles Davis，分寸很穩，也很耐聽，任何時候放下去都能把氣氛安定下來。\nhttps://open.spotify.com/album/example"
     );
   });
 
@@ -56,7 +58,7 @@ describe("share helpers", () => {
     expect(result.status).toBe("shared");
     expect(nativeShare).toHaveBeenCalledWith({
       title: "Kind of Blue · Miles Davis",
-      text: "今天想把《Kind of Blue》留給你。Miles Davis，把房間的光線降下來，這張會用極少的音符把空氣拉得很深。",
+      text: "今天想把《Kind of Blue》留給你。Miles Davis，分寸很穩，也很耐聽，任何時候放下去都能把氣氛安定下來。",
       url: "https://open.spotify.com/album/example"
     });
   });
