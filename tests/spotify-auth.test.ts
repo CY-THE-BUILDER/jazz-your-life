@@ -11,13 +11,13 @@ describe("spotify auth configuration", () => {
   });
 
   it("uses the same computed redirect uri for login and callback exchanges", () => {
-    expect(getSpotifyRedirectUri("https://jazz-your-life.vercel.app")).toBe(
-      "https://jazz-your-life.vercel.app/api/spotify/callback"
+    expect(getSpotifyRedirectUri("https://vanguard.noesis.studio")).toBe(
+      "https://vanguard.noesis.studio/api/spotify/callback"
     );
 
     process.env.SPOTIFY_REDIRECT_URI = "https://custom.example.com/api/spotify/callback";
 
-    expect(getSpotifyRedirectUri("https://jazz-your-life.vercel.app")).toBe(
+    expect(getSpotifyRedirectUri("https://vanguard.noesis.studio")).toBe(
       "https://custom.example.com/api/spotify/callback"
     );
   });
@@ -27,7 +27,7 @@ describe("spotify auth configuration", () => {
     process.env.SPOTIFY_CLIENT_ID = "client123";
 
     const url = buildSpotifyAuthorizeUrl({
-      origin: "https://jazz-your-life.vercel.app",
+      origin: "https://vanguard.noesis.studio",
       state: "state123",
       challenge: "challenge123"
     });
@@ -35,7 +35,7 @@ describe("spotify auth configuration", () => {
     expect(url.origin + url.pathname).toBe("https://accounts.spotify.com/authorize");
     expect(url.searchParams.get("client_id")).toBe("client123");
     expect(url.searchParams.get("redirect_uri")).toBe(
-      "https://jazz-your-life.vercel.app/api/spotify/callback"
+      "https://vanguard.noesis.studio/api/spotify/callback"
     );
     expect(url.searchParams.get("scope")).toBe(getSpotifyScopes());
     expect(url.searchParams.get("login_hint")).toBeNull();
