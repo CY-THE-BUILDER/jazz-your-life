@@ -5,7 +5,10 @@ export function middleware(request: NextRequest) {
   const canonicalUrl = new URL(getCanonicalSiteUrl());
   const requestHost = request.nextUrl.hostname;
 
-  if (requestHost === "noesis.studio" && canonicalUrl.hostname === "www.noesis.studio") {
+  if (
+    requestHost === "jazz.noesis.studio" ||
+    (requestHost === "noesis.studio" && canonicalUrl.hostname === "www.noesis.studio")
+  ) {
     const redirectUrl = new URL(request.nextUrl.pathname + request.nextUrl.search, canonicalUrl.origin);
     return NextResponse.redirect(redirectUrl, 308);
   }
