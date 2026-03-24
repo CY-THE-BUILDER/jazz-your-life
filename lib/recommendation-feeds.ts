@@ -1,4 +1,5 @@
 import { getCuratedPicksForVibe } from "@/data/jazz-picks";
+import { getRecentRecommendationIds } from "@/lib/recommendation-history";
 import { RecommendationFeed, Vibe, vibeOptions } from "@/types/jazz";
 
 export function ensureUniqueFeeds(
@@ -74,6 +75,7 @@ export function ensureUniqueFeeds(
         const fallback = getCuratedPicksForVibe(vibe, {
           limit: targetLength * 4,
           seed: seed + index,
+          avoidIds: getRecentRecommendationIds(vibe),
           excludeIds: new Set([
             ...savedIds,
             ...reservedIds,
@@ -93,6 +95,38 @@ export function ensureUniqueFeeds(
           selected.push(pick);
           reservedIds.add(pick.id);
         }
+      }
+    }
+
+    const recentIds = getRecentRecommendationIds(vibe).slice(0, targetLength);
+    const selectedSignature = selected.map((pick) => pick.id).join("|");
+    const recentSignature = recentIds.join("|");
+
+    if (recentIds.length >= targetLength && selectedSignature === recentSignature) {
+      const alternatePicks = getCuratedPicksForVibe(vibe, {
+        limit: targetLength * 4,
+        seed: seed + index + 53,
+        rotation: seed + index + 1,
+        avoidIds: recentIds,
+        excludeIds: new Set([
+          ...savedIds,
+          ...reservedIds,
+          ...selected.map((pick) => pick.id)
+        ])
+      });
+
+      for (const alternate of alternatePicks) {
+        if (selected.some((pick) => pick.id === alternate.id) || reservedIds.has(alternate.id)) {
+          continue;
+        }
+
+        const replaced = selected[selected.length - 1];
+        if (replaced) {
+          reservedIds.delete(replaced.id);
+          selected[selected.length - 1] = alternate;
+          reservedIds.add(alternate.id);
+        }
+        break;
       }
     }
 

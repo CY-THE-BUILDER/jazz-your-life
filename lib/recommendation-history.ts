@@ -1,4 +1,5 @@
 import { Vibe } from "@/types/jazz";
+import { RecommendationFeed, vibeOptions } from "@/types/jazz";
 
 const HISTORY_KEY = "daily-jazz-history";
 const SESSION_SEED_KEY = "daily-jazz-session-seed";
@@ -127,6 +128,20 @@ export function rememberRecommendationIds(vibe: Vibe, ids: string[]) {
 
   if (isBrowser()) {
     window.localStorage.setItem(GLOBAL_HISTORY_KEY, JSON.stringify(mergedGlobalPool));
+  }
+}
+
+export function rememberRecommendationBatch(feeds: Partial<Record<Vibe, RecommendationFeed>>) {
+  for (const vibe of vibeOptions) {
+    const picks = feeds[vibe]?.picks ?? [];
+    if (picks.length === 0) {
+      continue;
+    }
+
+    rememberRecommendationIds(
+      vibe,
+      picks.map((pick) => pick.id)
+    );
   }
 }
 

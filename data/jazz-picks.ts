@@ -1051,7 +1051,7 @@ function rotatePicks<T>(picks: T[], rotation: number) {
 
 export function getCuratedPicksForVibe(
   vibe: JazzPick["vibeTags"][number],
-  options?: { limit?: number; excludeIds?: Set<string>; rotation?: number; seed?: number }
+  options?: { limit?: number; excludeIds?: Set<string>; rotation?: number; seed?: number; avoidIds?: string[] }
 ) {
   const pool = curatedPickIdsByVibe[vibe]
     .map((id) => jazzPicks.find((pick) => pick.id === id))
@@ -1078,5 +1078,20 @@ export function getCuratedPicksForVibe(
     (options?.rotation ?? 0) + visitOffset
   );
 
-  return [...fresh, ...fallback].slice(0, options?.limit ?? 5);
+  const combined = [...fresh, ...fallback];
+  const limit = options?.limit ?? 5;
+  const avoidSignature = (options?.avoidIds ?? []).slice(0, limit).join("|");
+
+  if (!avoidSignature) {
+    return combined.slice(0, limit);
+  }
+
+  for (let offset = 0; offset < Math.max(combined.length, 1); offset += 1) {
+    const candidate = rotatePicks(combined, offset).slice(0, limit);
+    if (candidate.map((pick) => pick.id).join("|") !== avoidSignature) {
+      return candidate;
+    }
+  }
+
+  return combined.slice(0, limit);
 }

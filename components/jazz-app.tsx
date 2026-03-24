@@ -16,7 +16,7 @@ import {
   getGlobalRecommendationIds,
   getRecommendationRotation,
   getRecentRecommendationIds,
-  rememberRecommendationIds
+  rememberRecommendationBatch
 } from "@/lib/recommendation-history";
 import { buildCuratedFeed } from "@/lib/spotify-recommendations";
 import {
@@ -55,6 +55,7 @@ function buildFallbackFeedMap(savedIds: Set<string>, seed = 0, limit = initialVi
       excludeIds,
       rotation,
       seed,
+      avoidIds: getRecentRecommendationIds(vibe),
       limit
     });
 
@@ -107,7 +108,7 @@ export function JazzApp() {
   const [hydratedVibes, setHydratedVibes] = useState<Partial<Record<Vibe, true>>>({});
   const [isLoadingFeed, setIsLoadingFeed] = useState(true);
   const [sessionSeed, setSessionSeed] = useState(0);
-  const viewedVibesRef = useRef<Set<Vibe>>(new Set());
+  const rememberedSeedRef = useRef<number | null>(null);
 
   useEffect(() => {
     setSavedPicks(getSavedPicks());
@@ -198,26 +199,26 @@ export function JazzApp() {
 
     setFeedByVibe(buildFallbackFeedMap(savedIds, sessionSeed, initialVisiblePicks));
     setHydratedVibes({});
-    viewedVibesRef.current = new Set();
+    rememberedSeedRef.current = null;
     setIsLoadingFeed(false);
   }, [isReady, sessionSeed, spotifySession.connected, savedIds]);
 
   useEffect(() => {
-    if (!isReady || viewedVibesRef.current.has(activeVibe)) {
+    if (!isReady || rememberedSeedRef.current === sessionSeed) {
       return;
     }
 
-    const currentFeed = feedByVibe[activeVibe];
-    if (!currentFeed || currentFeed.picks.length === 0) {
-      return;
-    }
-
-    rememberRecommendationIds(
-      activeVibe,
-      currentFeed.picks.map((pick) => pick.id)
+    const hasCompleteBatch = vibeOptions.every(
+      (vibe) => (feedByVibe[vibe]?.picks.length ?? 0) >= initialVisiblePicks
     );
-    viewedVibesRef.current.add(activeVibe);
-  }, [activeVibe, feedByVibe, isReady]);
+
+    if (!hasCompleteBatch) {
+      return;
+    }
+
+    rememberRecommendationBatch(feedByVibe);
+    rememberedSeedRef.current = sessionSeed;
+  }, [feedByVibe, isReady, sessionSeed]);
 
   useEffect(() => {
     let ignore = false;

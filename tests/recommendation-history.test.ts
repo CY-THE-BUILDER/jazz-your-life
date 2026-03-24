@@ -1,11 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { getCuratedPicksForVibe } from "@/data/jazz-picks";
+import { ensureUniqueFeeds } from "@/lib/recommendation-feeds";
 import {
   createRecommendationSessionSeed,
   getGlobalRecommendationIds,
   getRecommendationRotation,
   getRecentRecommendationIds,
+  rememberRecommendationBatch,
   rememberRecommendationIds
 } from "@/lib/recommendation-history";
+import { buildCuratedFeed } from "@/lib/spotify-recommendations";
+import { vibeOptions } from "@/types/jazz";
 
 describe("recommendation history", () => {
   beforeEach(() => {
@@ -63,5 +68,45 @@ describe("recommendation history", () => {
     expect(first).not.toBe(second);
     expect(second).not.toBe(third);
     expect(first).toBeGreaterThan(1710000000000);
+  });
+
+  it("keeps all five shelves rotating across 50 visits without repeating the same batch back to back", () => {
+    let previousBatchByVibe: Record<string, string> = {};
+
+    for (let visit = 0; visit < 50; visit += 1) {
+      const seed = createRecommendationSessionSeed();
+      const reservedIds = new Set<string>(getGlobalRecommendationIds());
+      const feeds = Object.fromEntries(
+        vibeOptions.map((vibe) => {
+          const excludeIds = new Set([...reservedIds, ...getRecentRecommendationIds(vibe)]);
+          const picks = getCuratedPicksForVibe(vibe, {
+            limit: 5,
+            seed,
+            rotation: getRecommendationRotation(vibe),
+            excludeIds
+          });
+
+          picks.forEach((pick) => reservedIds.add(pick.id));
+          return [vibe, buildCuratedFeed(vibe, picks)];
+        })
+      );
+
+      const uniqueFeeds = ensureUniqueFeeds(feeds, { seed });
+      const allIds = vibeOptions.flatMap((vibe) => uniqueFeeds[vibe]?.picks.map((pick) => pick.id) ?? []);
+      expect(new Set(allIds).size).toBe(25);
+
+      for (const vibe of vibeOptions) {
+        const signature = (uniqueFeeds[vibe]?.picks ?? []).map((pick) => pick.id).join("|");
+        expect(uniqueFeeds[vibe]?.picks).toHaveLength(5);
+
+        if (previousBatchByVibe[vibe]) {
+          expect(signature).not.toBe(previousBatchByVibe[vibe]);
+        }
+
+        previousBatchByVibe[vibe] = signature;
+      }
+
+      rememberRecommendationBatch(uniqueFeeds);
+    }
   });
 });
