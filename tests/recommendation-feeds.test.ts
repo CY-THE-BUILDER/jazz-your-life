@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { getCuratedPicksForVibe } from "@/data/jazz-picks";
 import { ensureUniqueFeeds } from "@/lib/recommendation-feeds";
 import { buildCuratedFeed } from "@/lib/spotify-recommendations";
+import { JazzPick } from "@/types/jazz";
 import { vibeOptions } from "@/types/jazz";
 
 describe("recommendation feeds", () => {
@@ -36,5 +37,36 @@ describe("recommendation feeds", () => {
 
     expect(exploratoryIds).not.toContain(duplicateHead.id);
     expect(uniqueFeeds.Exploratory?.picks).toHaveLength(5);
+  });
+
+  it("uses personalized reserve picks before falling back to curated albums", () => {
+    const duplicate = getCuratedPicksForVibe("Classic", { limit: 1, seed: 3 })[0];
+    const spotifyPick = (id: string, title: string): JazzPick => ({
+      ...duplicate,
+      id,
+      title,
+      artist: "Spotify Artist",
+      source: "spotify",
+      vibeTags: ["Exploratory"],
+      imageUrl: `https://i.scdn.co/image/${id}`,
+      spotifyUrl: `https://open.spotify.com/album/${id}`,
+      shareUrl: `https://open.spotify.com/album/${id}`
+    });
+
+    const feeds = {
+      Classic: buildCuratedFeed("Classic", [duplicate]),
+      Exploratory: {
+        mode: "personalized" as const,
+        headline: "順著你最近的耳朵走",
+        note: "test",
+        picks: [duplicate],
+        reservePicks: [spotifyPick("spotify-1", "Reserve One")]
+      }
+    };
+
+    const uniqueFeeds = ensureUniqueFeeds(feeds, { seed: 3 });
+    expect(uniqueFeeds.Exploratory?.picks[0].id).toBe("spotify-1");
+    expect(uniqueFeeds.Exploratory?.picks[0].source).toBe("spotify");
+    expect(uniqueFeeds.Exploratory?.picks[0].imageUrl).toContain("i.scdn.co");
   });
 });

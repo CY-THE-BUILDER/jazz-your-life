@@ -70,6 +70,16 @@ describe("spotify session helpers", () => {
     ).toEqual(["connect"]);
   });
 
+  it("formats the connected label without parentheses", () => {
+    expect(
+      getSpotifyConnectionLabel({
+        configured: true,
+        connected: true,
+        displayName: "Miles"
+      })
+    ).toBe("已連接 Miles");
+  });
+
   it("clears the cached session when the user disconnects", () => {
     writeStoredSpotifySession({
       configured: true,

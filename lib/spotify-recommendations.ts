@@ -462,32 +462,32 @@ export function buildAlbumRecommendationReason(params: {
   > = {
     Classic: {
       familiar: [
-        `既然最近一直回到 ${params.sourceArtistName}，今天就讓《${params.albumTitle}》把那份從容聽完整。`,
-        `你耳朵還停在 ${params.sourceArtistName} 的餘韻裡，《${params.albumTitle}》剛好把那道老派光澤接住。`
+        `既然最近一直回到 ${params.sourceArtistName}，今天就讓《${params.albumTitle}》把那份老派分寸完整走一遍。`,
+        `你耳朵還停在 ${params.sourceArtistName} 的餘韻裡，《${params.albumTitle}》剛好把那道經典的光澤接住。`
       ],
       saved: [
-        `既然你曾經替 ${params.albumArtist} 留過位置，今天回到《${params.albumTitle}》，分寸會比記憶裡更漂亮。`,
-        `《${params.albumTitle}》這種專輯不適合只取一段，既然你留過 ${params.albumArtist}，就讓它完整走一遍。`
+        `既然你曾經替 ${params.albumArtist} 留過位置，今天回到《${params.albumTitle}》，會比記憶裡更顯得沉著。`,
+        `《${params.albumTitle}》這種專輯不適合只取一段，既然你留過 ${params.albumArtist}，就讓整張的起承轉合自己說話。`
       ],
       recent: [
-        `耳朵還記得 ${params.albumArtist} 的手勢時，接著聽《${params.albumTitle}》會很順。`,
-        `你最近才碰過 ${params.albumArtist}，現在回到《${params.albumTitle}》，像回到一間熟悉卻仍講究的房間。`
+        `耳朵還記得 ${params.albumArtist} 的手勢時，接著聽《${params.albumTitle}》會有種順水推舟的自然。`,
+        `你最近才碰過 ${params.albumArtist}，現在回到《${params.albumTitle}》，像走進一間陳設簡練卻處處講究的房間。`
       ],
       adjacent: [
-        `沿著 ${params.sourceArtistName} 這條線再往外走一步，《${params.albumTitle}》會把視野打開，卻不會失了分寸。`,
-        `如果想從 ${params.sourceArtistName} 再聽出一點枝節，《${params.albumTitle}》會是一個很準的延伸。`
+        `沿著 ${params.sourceArtistName} 這條線再往外走一步，《${params.albumTitle}》會把視野打開，卻不會失掉經典的骨架。`,
+        `如果想從 ${params.sourceArtistName} 再聽出更完整的輪廓，《${params.albumTitle}》會是一個很準的延伸。`
       ],
       fresh: [
-        `如果今天想從穩妥開始，《${params.albumTitle}》會是很好的第一張。`,
-        `《${params.albumTitle}》不需要鋪陳太多，一放下去，氣氛就會自己站穩。`
+        `如果今天想從真正穩得住的地方開始，《${params.albumTitle}》會是很好的第一張。`,
+        `《${params.albumTitle}》不需要鋪陳太多，一放下去，整個房間就會自己站穩。`
       ],
       sonic: [
         "它的呼吸和留白都拿得準，像老牌樂手下手，不急，也不空。",
-        "聽這張很像看一位老派調酒師收尾，手勢極少，卻沒有一筆多餘。"
+        "聽這張很像看一位老派調酒師收尾，動作極少，卻沒有一筆多餘。"
       ],
       era: [
-        "那種歷久不疲的重量，在這張裡不是招牌，而是底色。",
-        "它像一本翻得很舊卻始終好讀的冊子，每次回來都還有新的光。"
+        "那種歷久不疲的重量，在這張裡不是招牌，而是整張專輯的底色。",
+        "它像一本翻得很舊卻始終好讀的冊子，每次回來，都還會透出新的光。"
       ]
     },
     Exploratory: {
@@ -766,7 +766,11 @@ export function dedupePicks(picks: JazzPick[]) {
   }, []);
 }
 
-export function buildCuratedFeed(vibe: Vibe, picks: JazzPick[]): RecommendationFeed {
+export function buildCuratedFeed(
+  vibe: Vibe,
+  picks: JazzPick[],
+  reservePicks: JazzPick[] = []
+): RecommendationFeed {
   const copyByVibe: Record<Vibe, { headline: string; note: string }> = {
     Classic: {
       headline: "先把經典放進今天",
@@ -794,6 +798,7 @@ export function buildCuratedFeed(vibe: Vibe, picks: JazzPick[]): RecommendationF
     mode: "curated",
     headline: copyByVibe[vibe].headline,
     note: copyByVibe[vibe].note,
-    picks
+    picks,
+    reservePicks
   };
 }

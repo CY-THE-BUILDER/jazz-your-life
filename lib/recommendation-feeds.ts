@@ -30,17 +30,9 @@ export function ensureUniqueFeeds(
     });
 
     if (selected.length < targetLength) {
-      const fallback = getCuratedPicksForVibe(vibe, {
-        limit: targetLength * 4,
-        seed: seed + index,
-        excludeIds: new Set([
-          ...savedIds,
-          ...reservedIds,
-          ...selected.map((pick) => pick.id)
-        ])
-      });
+      const reservePicks = (feed.reservePicks ?? []).filter((pick) => !reservedIds.has(pick.id));
 
-      for (const pick of fallback) {
+      for (const pick of reservePicks) {
         if (selected.length >= targetLength) {
           break;
         }
@@ -51,6 +43,31 @@ export function ensureUniqueFeeds(
 
         selected.push(pick);
         reservedIds.add(pick.id);
+      }
+
+      if (selected.length < targetLength && feed.mode === "curated") {
+        const fallback = getCuratedPicksForVibe(vibe, {
+          limit: targetLength * 4,
+          seed: seed + index,
+          excludeIds: new Set([
+            ...savedIds,
+            ...reservedIds,
+            ...selected.map((pick) => pick.id)
+          ])
+        });
+
+        for (const pick of fallback) {
+          if (selected.length >= targetLength) {
+            break;
+          }
+
+          if (reservedIds.has(pick.id)) {
+            continue;
+          }
+
+          selected.push(pick);
+          reservedIds.add(pick.id);
+        }
       }
     }
 

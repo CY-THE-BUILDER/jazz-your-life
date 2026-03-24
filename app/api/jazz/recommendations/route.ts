@@ -258,12 +258,21 @@ async function buildCuratedResponseForVibe(
   seed = 0
 ) {
   const hydratedCurated = await Promise.all(
-    getCuratedPicksForVibe(vibe, { limit: Math.max(limit + 3, 6), excludeIds: excludedIds, rotation, seed }).map((pick) =>
+    getCuratedPicksForVibe(vibe, { limit: Math.max(limit + 8, 10), excludeIds: excludedIds, rotation, seed }).map((pick) =>
       accessToken ? hydrateCuratedPick(accessToken, pick) : hydratePublicArtworkForPick(pick)
     )
   );
 
-  return buildCuratedFeed(vibe, selectFreshPicks(hydratedCurated, excludedIds, limit, rotation, seed));
+  const selected = selectFreshPicks(hydratedCurated, excludedIds, limit, rotation, seed);
+  const reservePicks = selectFreshPicks(
+    hydratedCurated,
+    new Set([...excludedIds, ...selected.map((pick) => pick.id)]),
+    Math.max(limit, 6),
+    rotation + 1,
+    seed + 17
+  );
+
+  return buildCuratedFeed(vibe, selected, reservePicks);
 }
 
 function buildSignalDrivenPicks(
@@ -383,18 +392,35 @@ async function buildFeedForVibe(params: {
     savedTracks,
     tasteProfile
   );
-  const strongPersonalizedPicks = [...searchedPicks, ...signalPicks].filter((pick) =>
+  const allPersonalizedCandidates = rankPicksForVibeWithSeed(
+    [...searchedPicks, ...signalPicks],
+    vibe,
+    seed,
+    18
+  );
+  const strongPersonalizedPicks = allPersonalizedCandidates.filter((pick) =>
     isStrongFlavorMatch(pick, vibe)
   );
+  const personalizedPool =
+    strongPersonalizedPicks.length >= Math.min(3, limit)
+      ? strongPersonalizedPicks
+      : allPersonalizedCandidates;
   const personalizedPicks = selectFreshPicks(
-    rankPicksForVibeWithSeed(strongPersonalizedPicks, vibe, seed, 12),
+    personalizedPool,
     excludedIds,
     limit,
     rotation,
     seed
   );
+  const reservePicks = selectFreshPicks(
+    personalizedPool,
+    new Set([...excludedIds, ...personalizedPicks.map((pick) => pick.id)]),
+    Math.max(limit, 6),
+    rotation + 1,
+    seed + 17
+  );
 
-  if (personalizedPicks.length >= 3) {
+  if (personalizedPicks.length > 0) {
     const seedNames = Array.from(
       new Set(personalizedPicks.map((pick) => pick.seedArtist).filter(Boolean))
     ).slice(0, 3);
@@ -406,7 +432,8 @@ async function buildFeedForVibe(params: {
         seedNames.length > 0
           ? `這一輪順著 ${seedNames.join("、")} 附近的氣味往外展開，先替你留幾張更貼近 ${vibe} 的專輯。`
           : `先照著你最近的聽感往前推一步，替你留幾張更貼近 ${vibe} 的專輯。`,
-      picks: personalizedPicks
+      picks: personalizedPicks,
+      reservePicks
     };
   }
 

@@ -48,6 +48,7 @@ export type RecommendationFeed = {
   headline: string;
   note: string;
   picks: JazzPick[];
+  reservePicks?: JazzPick[];
 };
 
 export type RecommendationBatchRequest = {

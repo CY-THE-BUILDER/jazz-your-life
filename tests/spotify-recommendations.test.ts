@@ -238,6 +238,37 @@ describe("spotify recommendation mapping", () => {
     expect(lateNightReason).toContain("Head Hunters");
   });
 
+  it("writes more varied editorial copy for classic albums without collapsing into one note", () => {
+    const tasteProfile = buildTasteProfile(
+      [
+        {
+          id: "artist-classic",
+          name: "Miles Davis",
+          genres: ["modal jazz", "jazz trumpet"]
+        }
+      ],
+      [],
+      [],
+      []
+    );
+
+    const reason = buildAlbumRecommendationReason({
+      albumId: "album-classic",
+      albumTitle: "Somethin' Else",
+      albumArtist: "Cannonball Adderley",
+      albumYear: 1958,
+      subgenre: "Hard Bop",
+      activeVibe: "Classic",
+      tasteProfile,
+      sourceArtistName: "Miles Davis",
+      origin: "search"
+    });
+
+    expect(reason).toContain("Somethin' Else");
+    expect(reason).not.toContain("今天第一張專輯自然落下");
+    expect(reason.length).toBeGreaterThan(28);
+  });
+
   it("scores artists differently by flavor so seeds can shift with the selected vibe", () => {
     const fusionArtist = {
       id: "artist-fusion",
