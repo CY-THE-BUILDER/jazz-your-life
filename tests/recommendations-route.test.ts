@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
-import { ensureUniqueFeeds } from "@/lib/recommendation-feeds";
 
 const mockGetValidSpotifyAccessToken = vi.fn();
 const mockSpotifyGet = vi.fn();
@@ -712,7 +711,7 @@ describe("recommendations route", () => {
     });
     const response = await POST(request);
     const payload = await response.json();
-    const feeds = ensureUniqueFeeds(payload.feeds, { seed: 7, priorityVibe: "Classic" });
+    const feeds = payload.feeds;
     const allIds = Object.values(feeds).flatMap((feed) => feed?.picks.map((pick) => pick.id) ?? []);
 
     expect(new Set(allIds).size).toBe(25);
@@ -831,13 +830,16 @@ describe("recommendations route", () => {
       );
 
       const payload = await response.json();
-      const feeds = ensureUniqueFeeds(payload.feeds, { seed: iteration + 11, priorityVibe: "Classic" });
+      const feeds = payload.feeds;
 
       for (const vibe of ["Classic", "Exploratory", "Fusion", "Late Night", "Focus"] as const) {
         expect(feeds[vibe]?.picks).toHaveLength(5);
         expect(feeds[vibe]?.picks.some((pick) => pick.source === "spotify")).toBe(true);
         expect(feeds[vibe]?.picks.every((pick) => typeof pick.imageUrl === "string" && pick.imageUrl.length > 0)).toBe(true);
       }
+
+      const allIds = Object.values(feeds).flatMap((feed) => feed?.picks.map((pick) => pick.id) ?? []);
+      expect(new Set(allIds).size).toBe(25);
     }
   });
 
@@ -862,12 +864,15 @@ describe("recommendations route", () => {
       );
 
       const payload = await response.json();
-      const feeds = ensureUniqueFeeds(payload.feeds, { seed: iteration + 101, priorityVibe: "Classic" });
+      const feeds = payload.feeds;
 
       for (const vibe of ["Classic", "Exploratory", "Fusion", "Late Night", "Focus"] as const) {
         expect(feeds[vibe]?.picks).toHaveLength(5);
         expect(feeds[vibe]?.picks.every((pick) => typeof pick.imageUrl === "string" && pick.imageUrl.length > 0)).toBe(true);
       }
+
+      const allIds = Object.values(feeds).flatMap((feed) => feed?.picks.map((pick) => pick.id) ?? []);
+      expect(new Set(allIds).size).toBe(25);
     }
   });
 });

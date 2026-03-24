@@ -27,6 +27,7 @@ import {
   vibeProfiles
 } from "@/lib/spotify-recommendations";
 import { hydratePublicArtworkForPick, isRenderableArtworkUrl } from "@/lib/cover-art";
+import { ensureUniqueFeeds } from "@/lib/recommendation-feeds";
 import { JazzPick, RecommendationBatchRequest, RecommendationBatchResponse, RecommendationFeed, vibeOptions, Vibe } from "@/types/jazz";
 
 export const dynamic = "force-dynamic";
@@ -588,7 +589,12 @@ export async function POST(request: NextRequest) {
       feeds[entry.vibe] = feed;
     }
 
-    return NextResponse.json({ feeds }, {
+    const uniqueFeeds = ensureUniqueFeeds(feeds, {
+      seed: requests[0]?.seed ?? 0,
+      priorityVibe: requests[0]?.vibe
+    }) as RecommendationBatchResponse["feeds"];
+
+    return NextResponse.json({ feeds: uniqueFeeds }, {
       headers: { "Cache-Control": "no-store" }
     });
   } catch {
@@ -607,7 +613,12 @@ export async function POST(request: NextRequest) {
       feeds[entry.vibe] = feed;
     }
 
-    return NextResponse.json({ feeds }, {
+    const uniqueFeeds = ensureUniqueFeeds(feeds, {
+      seed: requests[0]?.seed ?? 0,
+      priorityVibe: requests[0]?.vibe
+    }) as RecommendationBatchResponse["feeds"];
+
+    return NextResponse.json({ feeds: uniqueFeeds }, {
       headers: { "Cache-Control": "no-store" }
     });
   }
