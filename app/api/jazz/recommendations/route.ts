@@ -354,6 +354,16 @@ async function finalizeFeedArtwork(feed: RecommendationFeed, limit: number) {
   };
 }
 
+function localizeFeed(feed: RecommendationFeed, locale: AppLocale): RecommendationFeed {
+  return {
+    ...feed,
+    picks: feed.picks.map((pick) => (pick.source === "curated" ? localizePick(pick, locale) : pick)),
+    reservePicks: (feed.reservePicks ?? []).map((pick) =>
+      pick.source === "curated" ? localizePick(pick, locale) : pick
+    )
+  };
+}
+
 function buildSignalDrivenPicks(
   activeVibe: JazzPick["vibeTags"][number],
   topArtists: SpotifyArtistEntity[],
@@ -516,7 +526,8 @@ async function buildFeedForVibe(params: {
       new Set(personalizedPicks.map((pick) => pick.seedArtist).filter(Boolean))
     ).slice(0, 3);
 
-    return finalizeFeedArtwork(
+    return localizeFeed(
+      await finalizeFeedArtwork(
       {
       mode: "personalized",
       headline: locale === "en" ? "Follow where your ear has been" : "順著你最近的耳朵走",
@@ -532,6 +543,8 @@ async function buildFeedForVibe(params: {
       reservePicks
       },
       limit
+      ),
+      locale
     );
   }
 
