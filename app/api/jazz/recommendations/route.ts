@@ -298,14 +298,11 @@ async function buildCuratedResponseForVibe(
     )
   );
 
-  const selected = selectFreshPicks(hydratedCurated, excludedIds, limit, rotation, seed);
-  const reservePicks = selectFreshPicks(
-    hydratedCurated,
-    new Set([...excludedIds, ...selected.map((pick) => pick.id)]),
-    Math.max(limit, 6),
-    rotation + 1,
-    seed + 17
-  );
+  const selected = hydratedCurated.slice(0, limit);
+  const reservePicks = hydratedCurated
+    .slice(limit)
+    .filter((pick) => !selected.some((entry) => entry.id === pick.id))
+    .slice(0, Math.max(limit, 6));
 
   return buildCuratedFeed(vibe, selected, reservePicks);
 }

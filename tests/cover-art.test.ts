@@ -292,6 +292,6 @@ describe("public artwork hydration", () => {
     expect(isRenderableArtworkUrl("https://open.spotify.com/search/Light%20as%20a%20Feather")).toBe(false);
     expect(isRenderableArtworkUrl("https://open.spotify.com/album/abc123")).toBe(false);
     expect(isRenderableArtworkUrl("https://i.scdn.co/image/abc123")).toBe(true);
-    expect(isRenderableArtworkUrl("data:image/svg+xml,placeholder")).toBe(true);
+    expect(isRenderableArtworkUrl("data:image/svg+xml,placeholder")).toBe(false);
   });
 });

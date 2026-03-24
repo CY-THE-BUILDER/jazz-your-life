@@ -25,7 +25,11 @@ export function isRenderableArtworkUrl(url?: string | null) {
     return false;
   }
 
-  if (url.startsWith("data:image/") || url.startsWith("blob:")) {
+  if (url.startsWith("data:image/")) {
+    return false;
+  }
+
+  if (url.startsWith("blob:")) {
     return true;
   }
 
