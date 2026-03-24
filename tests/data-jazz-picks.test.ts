@@ -152,6 +152,24 @@ describe("curated jazz picks", () => {
     }
   });
 
+  it("does not hand the same shelf back on consecutive seeded visits over 50 rounds", () => {
+    for (const vibe of vibeOptions) {
+      let previousSignature = "";
+
+      for (let round = 0; round < 50; round += 1) {
+        const shelf = getCuratedPicksForVibe(vibe, {
+          limit: 5,
+          seed: 100 + round,
+          rotation: round
+        }).map((pick) => pick.id);
+        const signature = shelf.join("|");
+
+        expect(signature).not.toBe(previousSignature);
+        previousSignature = signature;
+      }
+    }
+  });
+
   it("can build a full five-flavor pass without repeating albums across shelves", () => {
     const reservedIds = new Set<string>();
     const shelves = vibeOptions.map((vibe) => {

@@ -1004,7 +1004,7 @@ const curatedPickIdsByVibe = {
     "conference-of-the-birds",
     "john-coltrane-and-johnny-hartman",
     "emma-jean-thackray",
-    "alone-together"
+    "time-out"
   ]
 } satisfies Record<JazzPick["vibeTags"][number], string[]>;
 
@@ -1078,16 +1078,21 @@ export function getCuratedPicksForVibe(
     (options?.rotation ?? 0) + visitOffset
   );
 
-  const combined = [...fresh, ...fallback];
   const limit = options?.limit ?? 5;
   const avoidSignature = (options?.avoidIds ?? []).slice(0, limit).join("|");
+  const selectionOffset =
+    fresh.length > 0
+      ? Math.abs(hashSeed(`${vibe}-${seed}`)) % fresh.length
+      : 0;
+  const rotatedFresh = rotatePicks(fresh, selectionOffset);
+  const combined = [...rotatedFresh, ...fallback];
 
   if (!avoidSignature) {
     return combined.slice(0, limit);
   }
 
-  for (let offset = 0; offset < Math.max(combined.length, 1); offset += 1) {
-    const candidate = rotatePicks(combined, offset).slice(0, limit);
+  for (let offset = 0; offset < Math.max(rotatedFresh.length, 1); offset += 1) {
+    const candidate = [...rotatePicks(rotatedFresh, offset), ...fallback].slice(0, limit);
     if (candidate.map((pick) => pick.id).join("|") !== avoidSignature) {
       return candidate;
     }
