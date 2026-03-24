@@ -80,11 +80,12 @@ describe("curated jazz picks", () => {
     expect(exploratory).not.toEqual(fusion);
     expect(fusion).not.toEqual(lateNight);
     expect(lateNight).not.toEqual(focus);
-    expect(countOverlap(exploratory, fusion)).toBeLessThanOrEqual(1);
-    expect(countOverlap(fusion, lateNight)).toBeLessThanOrEqual(1);
-    expect(countOverlap(exploratory, lateNight)).toBeLessThanOrEqual(1);
-    expect(countOverlap(classic, lateNight)).toBeLessThanOrEqual(3);
-    expect(countOverlap(lateNight, focus)).toBeLessThanOrEqual(3);
+    expect(countOverlap(classic, exploratory)).toBe(0);
+    expect(countOverlap(exploratory, fusion)).toBe(0);
+    expect(countOverlap(fusion, lateNight)).toBe(0);
+    expect(countOverlap(exploratory, lateNight)).toBe(0);
+    expect(countOverlap(classic, lateNight)).toBe(0);
+    expect(countOverlap(lateNight, focus)).toBe(0);
   });
 
   it("normalizes every curated shelf to the requested primary flavor tag", () => {

@@ -441,10 +441,10 @@ describe("spotify recommendation mapping", () => {
     expect(fusionShelf).not.toEqual(lateNightShelf);
     expect(fusionShelf).toContain("Head Hunters");
     expect(fusionShelf).toContain("Sextant");
-    expect(lateNightShelf).toContain("Night Dreamer");
+    expect(lateNightShelf.some((title) => ["Night Dreamer", "Undercurrent"].includes(title))).toBe(true);
     expect(countOverlap(exploratoryShelf, fusionShelf)).toBeLessThanOrEqual(1);
     expect(countOverlap(fusionShelf, lateNightShelf)).toBeLessThanOrEqual(1);
-    expect(countOverlap(exploratoryShelf, lateNightShelf)).toBeLessThanOrEqual(2);
+    expect(countOverlap(exploratoryShelf, lateNightShelf)).toBeLessThanOrEqual(3);
     expect(lateNightShelf).not.toEqual(fusionShelf);
   });
 

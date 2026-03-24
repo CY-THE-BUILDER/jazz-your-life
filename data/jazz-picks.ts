@@ -947,92 +947,64 @@ const curatedPickIdsByVibe = {
     "kind-of-blue",
     "blue-train",
     "somethin-else",
+    "moanin",
     "time-out",
     "sunday-at-the-village-vanguard",
-    "moanin",
-    "maiden-voyage",
-    "chet-baker-sings",
-    "john-coltrane-and-johnny-hartman",
-    "a-love-supreme",
+    "saxophone-colossus",
     "mingus-ah-um",
     "the-sidewinder",
     "getz-gilberto",
-    "saxophone-colossus",
-    "the-awakening",
-    "ballads"
+    "john-coltrane-and-johnny-hartman"
   ],
   Exploratory: [
     "out-to-lunch",
-    "journey-in-satchidananda",
+    "point-of-departure",
     "speak-no-evil",
+    "journey-in-satchidananda",
     "night-dreamer",
     "the-epic",
-    "extensions",
-    "yellow",
-    "maiden-voyage",
-    "a-love-supreme",
-    "point-of-departure",
     "the-black-saint-and-the-sinner-lady",
     "karma",
     "conference-of-the-birds",
     "crescent",
-    "light-as-a-feather",
-    "romantic-warrior",
-    "bitches-brew",
-    "mingus-ah-um"
+    "a-love-supreme",
+    "emma-jean-thackray"
   ],
   Fusion: [
     "head-hunters",
     "sextant",
     "heavy-weather",
-    "mysterious-traveller",
-    "electric-byrd",
-    "black-focus",
     "black-radio",
-    "yellow",
     "bitches-brew",
     "thrust",
+    "mysterious-traveller",
+    "electric-byrd",
     "light-as-a-feather",
     "romantic-warrior",
-    "source"
+    "black-focus"
   ],
   "Late Night": [
     "undercurrent",
     "chet-baker-sings",
-    "john-coltrane-and-johnny-hartman",
     "idle-moments",
     "you-must-believe-in-spring",
     "waltz-for-debby",
-    "journey-in-satchidananda",
-    "night-dreamer",
-    "getz-gilberto",
     "ballads",
     "moon-beams",
     "night-lights",
     "beyond-the-missouri-sky",
-    "the-black-saint-and-the-sinner-lady",
-    "karma",
-    "crescent"
+    "alone-together"
   ],
   Focus: [
-    "time-out",
     "bright-size-life",
     "source",
     "maiden-voyage",
-    "black-focus",
-    "undercurrent",
-    "idle-moments",
     "extensions",
-    "you-must-believe-in-spring",
-    "a-love-supreme",
-    "the-sidewinder",
-    "conference-of-the-birds",
     "the-awakening",
-    "alone-together",
-    "crescent",
-    "getz-gilberto",
-    "moon-beams",
-    "beyond-the-missouri-sky"
+    "conference-of-the-birds",
+    "john-coltrane-and-johnny-hartman",
+    "emma-jean-thackray",
+    "alone-together"
   ]
 } satisfies Record<JazzPick["vibeTags"][number], string[]>;
 
@@ -1081,12 +1053,13 @@ export function getCuratedPicksForVibe(
   vibe: JazzPick["vibeTags"][number],
   options?: { limit?: number; excludeIds?: Set<string>; rotation?: number; seed?: number }
 ) {
-  const pool = jazzPicks
+  const pool = curatedPickIdsByVibe[vibe]
+    .map((id) => jazzPicks.find((pick) => pick.id === id))
+    .filter((pick): pick is JazzPick => Boolean(pick))
     .map((pick) => ({
       ...pick,
-      vibeTags: [pick.vibeTags[0]]
-    }))
-    .filter((pick) => pick.vibeTags[0] === vibe);
+      vibeTags: [vibe]
+    }));
   const excludedIds = options?.excludeIds ?? new Set<string>();
   const seed = options?.seed ?? 0;
   const visitOffset = pool.length > 0 ? Math.abs(seed) % pool.length : 0;

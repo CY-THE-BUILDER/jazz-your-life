@@ -69,4 +69,72 @@ describe("recommendation feeds", () => {
     expect(uniqueFeeds.Exploratory?.picks[0].source).toBe("spotify");
     expect(uniqueFeeds.Exploratory?.picks[0].imageUrl).toContain("i.scdn.co");
   });
+
+  it("keeps all five shelves filled to five picks while preserving at least one Spotify pick per personalized flavor", () => {
+    const makePick = (id: string, vibe: "Classic" | "Exploratory" | "Fusion" | "Late Night" | "Focus", source: "spotify" | "curated"): JazzPick => ({
+      id,
+      title: id,
+      artist: source === "spotify" ? "Spotify Artist" : "Curated Artist",
+      type: "album",
+      subgenre: vibe === "Fusion" ? "Fusion" : vibe === "Focus" ? "Piano Jazz" : "Jazz",
+      vibeTags: [vibe],
+      recommendationReason: "test",
+      imageUrl: source === "spotify" ? `https://i.scdn.co/image/${id}` : `https://example.com/${id}.jpg`,
+      spotifyUrl: `https://open.spotify.com/album/${id}`,
+      shareUrl: `https://open.spotify.com/album/${id}`,
+      year: 1970,
+      durationLabel: "40 min",
+      accentColor: "#999999",
+      source
+    });
+
+    const duplicateSpotify = makePick("dup-spotify", "Fusion", "spotify");
+    const feeds = {
+      Classic: {
+        mode: "personalized" as const,
+        headline: "c",
+        note: "c",
+        picks: [duplicateSpotify, makePick("classic-1", "Classic", "spotify"), makePick("classic-2", "Classic", "spotify"), makePick("classic-3", "Classic", "spotify"), makePick("classic-4", "Classic", "spotify")],
+        reservePicks: [makePick("classic-r1", "Classic", "spotify"), makePick("classic-r2", "Classic", "spotify")]
+      },
+      Exploratory: {
+        mode: "personalized" as const,
+        headline: "e",
+        note: "e",
+        picks: [duplicateSpotify, makePick("explore-1", "Exploratory", "spotify")],
+        reservePicks: [makePick("explore-r1", "Exploratory", "spotify"), makePick("explore-r2", "Exploratory", "spotify")]
+      },
+      Fusion: {
+        mode: "personalized" as const,
+        headline: "f",
+        note: "f",
+        picks: [duplicateSpotify, makePick("fusion-1", "Fusion", "spotify")],
+        reservePicks: [makePick("fusion-r1", "Fusion", "spotify"), makePick("fusion-r2", "Fusion", "spotify")]
+      },
+      "Late Night": {
+        mode: "personalized" as const,
+        headline: "l",
+        note: "l",
+        picks: [duplicateSpotify, makePick("late-1", "Late Night", "spotify")],
+        reservePicks: [makePick("late-r1", "Late Night", "spotify"), makePick("late-r2", "Late Night", "spotify")]
+      },
+      Focus: {
+        mode: "personalized" as const,
+        headline: "o",
+        note: "o",
+        picks: [duplicateSpotify, makePick("focus-1", "Focus", "spotify")],
+        reservePicks: [makePick("focus-r1", "Focus", "spotify"), makePick("focus-r2", "Focus", "spotify")]
+      }
+    };
+
+    const uniqueFeeds = ensureUniqueFeeds(feeds, { seed: 4, priorityVibe: "Late Night" });
+
+    for (const vibe of vibeOptions) {
+      expect(uniqueFeeds[vibe]?.picks).toHaveLength(5);
+      expect(uniqueFeeds[vibe]?.picks.some((pick) => pick.source === "spotify")).toBe(true);
+    }
+
+    const ids = vibeOptions.flatMap((vibe) => uniqueFeeds[vibe]?.picks.map((pick) => pick.id) ?? []);
+    expect(new Set(ids).size).toBe(25);
+  });
 });

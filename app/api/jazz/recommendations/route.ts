@@ -12,8 +12,10 @@ import {
   buildTasteProfile,
   buildTrackPick,
   isStrongFlavorMatch,
+  pinPickToVibe,
   rankPicksForVibe,
   rankPicksForVibeWithSeed,
+  scorePickForVibe,
   selectFreshPicks,
   isJazzAdjacentArtist,
   ListenerTasteProfile,
@@ -69,7 +71,7 @@ function albumMatchesActiveFlavor(
   pick: JazzPick,
   activeVibe: JazzPick["vibeTags"][number]
 ) {
-  return pick.vibeTags[0] === activeVibe && isStrongFlavorMatch(pick, activeVibe);
+  return isStrongFlavorMatch(pick, activeVibe) || scorePickForVibe(pick, activeVibe) >= 7;
 }
 
 function selectSeedArtistsForVibe(
@@ -212,8 +214,14 @@ async function buildSearchDrivenPicks(
 ) {
   const searchResults = await Promise.all(
     seedArtists.slice(0, 4).map(async (artist) => {
-      const queries = vibeProfiles[activeVibe].searchTerms.map(
-        (term) => `artist:"${artist.name}" ${term}`
+      const queries = Array.from(
+        new Set([
+          ...vibeProfiles[activeVibe].searchTerms.map(
+            (term) => `artist:"${artist.name}" ${term}`
+          ),
+          `artist:"${artist.name}"`,
+          `${artist.name} ${vibeProfiles[activeVibe].searchTerms[0]}`
+        ])
       );
 
       const responses = await Promise.all(
@@ -223,7 +231,7 @@ async function buildSearchDrivenPicks(
               searchSpotify(accessToken, {
                 q: query,
                 type: "album",
-                limit: 5
+                limit: 8
               }),
             {} as SearchResponse
           )
@@ -265,7 +273,7 @@ async function buildSearchDrivenPicks(
     searchResults.flat().filter((pick) => albumMatchesActiveFlavor(pick, activeVibe)),
     activeVibe,
     12
-  );
+  ).map((pick) => pinPickToVibe(pick, activeVibe));
 }
 
 async function buildCuratedResponseForVibe(
@@ -349,7 +357,7 @@ function buildSignalDrivenPicks(
       .filter((pick) => albumMatchesActiveFlavor(pick, activeVibe)),
     activeVibe,
     12
-  );
+  ).map((pick) => pinPickToVibe(pick, activeVibe));
 }
 
 async function loadListenerData(accessToken: string): Promise<ListenerData> {
@@ -524,13 +532,12 @@ export async function POST(request: NextRequest) {
 
   try {
     const listenerData = accessToken ? await loadListenerData(accessToken) : null;
-    const reservedIds = new Set<string>();
     const feeds = {} as RecommendationBatchResponse["feeds"];
 
     for (const entry of requests) {
       const feed = await buildFeedForVibe({
         vibe: entry.vibe,
-        excludedIds: new Set([...entry.excludeIds, ...reservedIds]),
+        excludedIds: new Set(entry.excludeIds),
         rotation: entry.rotation,
         seed: entry.seed ?? 0,
         limit: Math.max(1, Math.min(8, entry.limit ?? 5)),
@@ -539,22 +546,18 @@ export async function POST(request: NextRequest) {
       });
 
       feeds[entry.vibe] = feed;
-      feed.picks.forEach((pick) => {
-        reservedIds.add(pick.id);
-      });
     }
 
     return NextResponse.json({ feeds }, {
       headers: { "Cache-Control": "no-store" }
     });
   } catch {
-    const reservedIds = new Set<string>();
     const feeds = {} as RecommendationBatchResponse["feeds"];
 
     for (const entry of requests) {
       const feed = await buildCuratedResponseForVibe(
         entry.vibe,
-        new Set([...entry.excludeIds, ...reservedIds]),
+        new Set(entry.excludeIds),
         entry.rotation,
         null,
         Math.max(1, Math.min(8, entry.limit ?? 5)),
@@ -562,9 +565,6 @@ export async function POST(request: NextRequest) {
       );
 
       feeds[entry.vibe] = feed;
-      feed.picks.forEach((pick) => {
-        reservedIds.add(pick.id);
-      });
     }
 
     return NextResponse.json({ feeds }, {

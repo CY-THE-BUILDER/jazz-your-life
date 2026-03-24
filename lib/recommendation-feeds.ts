@@ -6,20 +6,45 @@ export function ensureUniqueFeeds(
   options?: {
     seed?: number;
     savedIds?: Set<string>;
+    priorityVibe?: Vibe;
   }
 ) {
   const reservedIds = new Set<string>();
   const savedIds = options?.savedIds ?? new Set<string>();
   const seed = options?.seed ?? 0;
   const nextFeeds = {} as Partial<Record<Vibe, RecommendationFeed>>;
+  const vibesInOrder = vibeOptions
+    .filter((vibe) => Boolean(feeds[vibe]))
+    .sort((left, right) => {
+      if (options?.priorityVibe === left) {
+        return -1;
+      }
 
-  for (const [index, vibe] of vibeOptions.entries()) {
+      if (options?.priorityVibe === right) {
+        return 1;
+      }
+
+      const leftFeed = feeds[left];
+      const rightFeed = feeds[right];
+      const leftOptions =
+        (leftFeed?.picks.length ?? 0) + (leftFeed?.reservePicks?.length ?? 0);
+      const rightOptions =
+        (rightFeed?.picks.length ?? 0) + (rightFeed?.reservePicks?.length ?? 0);
+
+      if (leftOptions !== rightOptions) {
+        return leftOptions - rightOptions;
+      }
+
+      return vibeOptions.indexOf(left) - vibeOptions.indexOf(right);
+    });
+
+  for (const [index, vibe] of vibesInOrder.entries()) {
     const feed = feeds[vibe];
     if (!feed) {
       continue;
     }
 
-    const targetLength = Math.max(feed.picks.length, 1);
+    const targetLength = Math.max(feed.picks.length, 5);
     const selected = feed.picks.filter((pick) => {
       if (reservedIds.has(pick.id)) {
         return false;
@@ -45,7 +70,7 @@ export function ensureUniqueFeeds(
         reservedIds.add(pick.id);
       }
 
-      if (selected.length < targetLength && feed.mode === "curated") {
+      if (selected.length < targetLength) {
         const fallback = getCuratedPicksForVibe(vibe, {
           limit: targetLength * 4,
           seed: seed + index,

@@ -59,8 +59,9 @@ const strongFlavorMatchThreshold = 12;
 const genreToVibes: Array<{ match: RegExp; vibes: Vibe[]; subgenre: string }> = [
   { match: /fusion|jazz funk|nu jazz|broken beat|jazztronica/i, vibes: ["Fusion", "Exploratory"], subgenre: "Fusion" },
   { match: /piano jazz|jazz piano/i, vibes: ["Focus", "Late Night"], subgenre: "Piano Jazz" },
+  { match: /post-bop/i, vibes: ["Exploratory", "Late Night"], subgenre: "Post-Bop" },
   { match: /modal jazz|spiritual jazz/i, vibes: ["Exploratory", "Late Night"], subgenre: "Modal Jazz" },
-  { match: /hard bop|bebop|post-bop/i, vibes: ["Classic", "Exploratory"], subgenre: "Hard Bop" },
+  { match: /hard bop|bebop/i, vibes: ["Classic", "Exploratory"], subgenre: "Hard Bop" },
   { match: /cool jazz|west coast jazz/i, vibes: ["Classic", "Focus"], subgenre: "Cool Jazz" },
   { match: /contemporary jazz|modern jazz|jazz saxophone|indie jazz|jazz trio/i, vibes: ["Focus", "Late Night"], subgenre: "Contemporary Jazz" },
   { match: /jazz/i, vibes: ["Classic", "Late Night"], subgenre: "Jazz" }
@@ -211,7 +212,7 @@ export const vibeProfiles: Record<
 > = {
   Classic: {
     searchTerms: ["hard bop", "cool jazz", "modal jazz"],
-    preferredSubgenres: ["Hard Bop", "Cool Jazz", "Modal Jazz", "Jazz"],
+    preferredSubgenres: ["Hard Bop", "Cool Jazz", "Modal Jazz", "Piano Jazz", "Post-Bop", "Jazz"],
     discouragedSubgenres: ["Fusion", "Contemporary Jazz"],
     preferredDecades: [
       [1950, 1959],
@@ -329,6 +330,17 @@ export function normalizePickFlavor(pick: JazzPick): JazzPick {
   return {
     ...pick,
     vibeTags: [primaryVibe]
+  };
+}
+
+export function pinPickToVibe(pick: JazzPick, vibe: Vibe): JazzPick {
+  if (pick.vibeTags.length === 1 && pick.vibeTags[0] === vibe) {
+    return pick;
+  }
+
+  return {
+    ...pick,
+    vibeTags: [vibe]
   };
 }
 
