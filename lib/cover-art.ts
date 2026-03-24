@@ -205,7 +205,7 @@ export async function hydratePublicArtworkForPick(
   fetchImpl: FetchLike = fetch
 ) {
   if (fetchImpl === fetch) {
-    const cacheKey = `${pick.id}:${pick.spotifyUrl}:${pick.artworkSourceUrl ?? ""}`;
+    const cacheKey = `${pick.id}:${pick.spotifyUrl}:${pick.artworkSourceUrl ?? ""}:${pick.recommendationReason}`;
     const cached = publicArtworkHydrationCache.get(cacheKey);
     if (cached) {
       return cached;
