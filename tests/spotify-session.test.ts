@@ -90,7 +90,7 @@ describe("spotify session helpers", () => {
         },
         "en"
       )
-    ).toBe("Connected Miles");
+    ).toBe("Connected: Miles");
   });
 
   it("clears the cached session when the user disconnects", () => {

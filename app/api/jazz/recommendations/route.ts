@@ -530,12 +530,12 @@ async function buildFeedForVibe(params: {
       await finalizeFeedArtwork(
       {
       mode: "personalized",
-      headline: locale === "en" ? "Follow where your ear has been" : "順著你最近的耳朵走",
+      headline: locale === "en" ? "Follow your ear" : "順著你最近的耳朵走",
       note:
         locale === "en"
           ? seedNames.length > 0
-            ? `This round drifts outward from the atmosphere around ${seedNames.join(", ")}, leaving you a few records that sit closer to ${vibe}.`
-            : `This round starts from the sound you've been living with lately and leaves you a few records that sit closer to ${vibe}.`
+            ? `This round starts from the world around ${seedNames.join(", ")} and leans toward records that sit closer to ${vibe}.`
+            : `This round starts from the sound you've been living with lately and leans toward records that sit closer to ${vibe}.`
           : seedNames.length > 0
             ? `這一輪順著 ${seedNames.join("、")} 附近的氣味往外展開，先替你留幾張更貼近 ${vibe} 的專輯。`
             : `先照著你最近的聽感往前推一步，替你留幾張更貼近 ${vibe} 的專輯。`,

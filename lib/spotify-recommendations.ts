@@ -477,22 +477,22 @@ export function buildReason(
 ) {
   if (locale === "en") {
     if (origin === "top") {
-      return `You've spent enough time around ${artistName} lately that this feels like the natural next turn.`;
+      return `You've been spending real time with ${artistName}, so this feels like the next record your ear would reach for on its own.`;
     }
 
     if (origin === "saved") {
-      return `You've already made room for ${artistName}; this one slips in beautifully after that.`;
+      return `You've already made room for ${artistName}; this slips in naturally after that.`;
     }
 
     if (origin === "search") {
-      return `A small step outward from ${artistName}, but one that still keeps the thread in your hand.`;
+      return `A small step out from ${artistName}, but one that keeps the thread in your hand.`;
     }
 
     if (vibe === "Late Night") {
-      return `You've been circling this kind of ${artistName} texture at night; this keeps the afterglow moving.`;
+      return `You've been circling this kind of ${artistName} texture at night; this keeps the afterglow going.`;
     }
 
-    return `Starting from the ${artistName} shape you've been hearing lately, this nudges the feeling a little farther forward.`;
+    return `Starting from the shape ${artistName} has left in your ear lately, this pushes the feeling a little farther out.`;
   }
 
   if (origin === "top") {
@@ -825,44 +825,44 @@ function buildAlbumRecommendationReasonEn(params: {
     Classic: {
       familiar: [
         `You've been living with ${params.sourceArtistName} lately; ${params.albumTitle} keeps that classic poise intact from the first bar.`,
-        `If your ear is still resting in ${params.sourceArtistName}, ${params.albumTitle} catches that older glow without overexplaining it.`,
-        `Since you've already been circling ${params.sourceArtistName}, ${params.albumTitle} feels like the kind of classic that lets the room settle on its own.`
+        `If your ear is still resting in ${params.sourceArtistName}, ${params.albumTitle} catches that old glow without polishing it too hard.`,
+        `Since you've already been circling ${params.sourceArtistName}, ${params.albumTitle} feels like the kind of classic that can settle a room on its own.`
       ],
       saved: [
         `You've already made room for ${params.albumArtist}; returning to ${params.albumTitle} now feels even more composed than memory suggests.`,
         `${params.albumTitle} really wants the whole side, not just an excerpt. If ${params.albumArtist} is already in your orbit, this is the right way back in.`,
-        `Because you've kept ${params.albumArtist} close before, ${params.albumTitle} lands like an old record with perfect weight in the hand.`
+        `Because you've kept ${params.albumArtist} close before, ${params.albumTitle} lands like a familiar sleeve with perfect weight in the hand.`
       ],
       recent: [
         `With ${params.albumArtist} still fresh in the ear, ${params.albumTitle} arrives with that rare sense of inevitability.`,
-        `You were just near ${params.albumArtist}; ${params.albumTitle} feels like stepping into a room where every detail has already been placed exactly right.`,
-        `While ${params.albumArtist} is still in the ear, ${params.albumTitle} makes its formal grace feel especially clear.`
+        `You were just near ${params.albumArtist}; ${params.albumTitle} feels like stepping into a room where every chair, lamp, and note is already in the right place.`,
+        `While ${params.albumArtist} is still in the ear, ${params.albumTitle} lets its sense of shape come through beautifully.`
       ],
       adjacent: [
         `Take one small step outward from ${params.sourceArtistName} and ${params.albumTitle} opens the field without loosening the classic frame.`,
-        `If you want a fuller silhouette beyond ${params.sourceArtistName}, ${params.albumTitle} is an unusually precise extension.`,
+        `If you want a fuller silhouette beyond ${params.sourceArtistName}, ${params.albumTitle} is a beautifully precise extension.`,
         `Starting from ${params.sourceArtistName}, ${params.albumTitle} shows how beautifully classic jazz can balance confidence and restraint.`
       ],
       fresh: [
         `If today wants to begin somewhere that already knows how to hold its ground, ${params.albumTitle} is a very elegant first choice.`,
-        `${params.albumTitle} doesn't need much preface; one side in and the room is already standing steady.`,
+        `${params.albumTitle} doesn't need much setup; one side in and the room is already steady.`,
         `${params.albumTitle} feels like the kind of record that knows exactly when to open the door and let the day begin.`
       ],
       sonic: [
         "Its breathing room is beautifully judged, the touch never hurried and never sparse.",
-        "Listening to this feels like watching an old-school bartender finish a drink with very few motions and no wasted ones.",
-        "It moves without haste but carries a deep glow, the way a great pressing settles the room in its first rotation."
+        "Listening to this feels like watching an old-school bartender finish a drink with almost no movement and no wasted motion.",
+        "It moves without hurry but carries a deep glow, the way a great pressing settles the room within its first rotation."
       ],
       era: [
-        "Its weight is not nostalgia; it is simply the natural gravity of a record built to last.",
-        "Like a well-thumbed volume that remains quietly luminous every time you return to it, this one keeps revealing its depth.",
+        "Its weight is not nostalgia; it's just the natural gravity of a record built to last.",
+        "Like a well-thumbed volume that still lights up when you open it, this one keeps revealing more the longer you know it.",
         `${params.albumTitle} belongs to that class of records whose age stops mattering the moment the sound appears.`
       ]
     },
     Exploratory: {
       familiar: [
-        `You've been spending time with ${params.sourceArtistName}; ${params.albumTitle} takes that line and nudges it toward a wider horizon.`,
-        `If your ear is still tuned to ${params.sourceArtistName}, ${params.albumTitle} opens the familiar into something more unguarded and bright.`
+        `You've been spending time with ${params.sourceArtistName}; ${params.albumTitle} takes that line and pushes it a little farther toward open water.`,
+        `If your ear is still tuned to ${params.sourceArtistName}, ${params.albumTitle} opens the familiar into something brighter and less obedient.`
       ],
       saved: [
         `Since ${params.albumArtist} is already someone you've kept near, ${params.albumTitle} feels like the right moment to walk a little farther in.`,
@@ -870,7 +870,7 @@ function buildAlbumRecommendationReasonEn(params: {
       ],
       recent: [
         `With ${params.albumArtist} still fresh in the ear, ${params.albumTitle} opens the frame just enough to make everything feel larger.`,
-        `You were just near ${params.albumArtist}; ${params.albumTitle} feels like turning off the familiar road into a brighter, stranger street.`
+        `You were just near ${params.albumArtist}; ${params.albumTitle} feels like stepping off the familiar block and finding a better-lit back street.`
       ],
       adjacent: [
         `Shift the angle only slightly away from ${params.sourceArtistName}, and ${params.albumTitle} starts to show where the interesting edges really are.`,
@@ -882,17 +882,17 @@ function buildAlbumRecommendationReasonEn(params: {
       ],
       sonic: [
         "Its turns feel like a line still being drawn, brightening as it branches.",
-        "It moves like streetlights appearing one by one in the distance: not one fixed direction, but several that all lead deeper in."
+        "It moves like streetlights appearing one by one in the distance: not one fixed direction, but several ways deeper in."
       ],
       era: [
-        "What makes it compelling is not novelty alone, but the way familiar language is rearranged into a new sense of depth.",
-        "Like the kind of set that reveals its true weight only in the late slot, it grows more exact the longer you stay with it."
+        "What makes it compelling is not novelty by itself, but the way familiar language gets rearranged into a new depth of field.",
+        "Like the kind of set that reveals its true weight in the late slot, it gets more exact the longer you stay with it."
       ]
     },
     Fusion: {
       familiar: [
-        `You've been circling ${params.sourceArtistName}; ${params.albumTitle} is where that current really opens into motion.`,
-        `If your ear is still in ${params.sourceArtistName}, ${params.albumTitle} catches the charge and sends it farther down the line.`
+        `You've been circling ${params.sourceArtistName}; ${params.albumTitle} is where that current really opens up and starts moving.`,
+        `If your ear is still in ${params.sourceArtistName}, ${params.albumTitle} catches that charge and sends it farther down the line.`
       ],
       saved: [
         `Since ${params.albumArtist} is already in your orbit, ${params.albumTitle} comes back feeling even more charged than memory allows.`,
@@ -900,10 +900,10 @@ function buildAlbumRecommendationReasonEn(params: {
       ],
       recent: [
         `With ${params.albumArtist} still fresh in the ear, ${params.albumTitle} drops the center of gravity exactly where it should be.`,
-        `You were just near ${params.albumArtist}; ${params.albumTitle} feels like pushing the fader one more notch forward.`
+        `You were just near ${params.albumArtist}; ${params.albumTitle} feels like pushing the fader one more notch up.`
       ],
       adjacent: [
-        `Take one step beyond ${params.sourceArtistName} and ${params.albumTitle} fills in the rhythm, the low end, and the gleam in one move.`,
+        `Take one step beyond ${params.sourceArtistName} and ${params.albumTitle} fills in the rhythm, the low end, and the shine in one move.`,
         `If you want to turn the voltage up slightly from ${params.sourceArtistName}, ${params.albumTitle} is very much the right answer.`
       ],
       fresh: [
@@ -911,18 +911,18 @@ function buildAlbumRecommendationReasonEn(params: {
         `Drop ${params.albumTitle} and the whole room starts to move with it.`
       ],
       sonic: [
-        "The low end holds its line and the syncopation stays clean, like a night drive skimming along wet asphalt.",
-        "The electric edge here is structural, not decorative. The farther in you go, the more inevitable the pull becomes."
+        "The low end holds its line and the syncopation stays clean, like a night drive skimming over wet asphalt.",
+        "The electric edge here is structural, not decorative. The farther in you go, the more inevitable the pull feels."
       ],
       era: [
         "It carries the shine and push that the post-seventies city record learned to do so well.",
-        "If jazz can wear neon without losing its shape, this is one of the cleanest ways it happens."
+        "If jazz can wear neon without losing its shape, this is one of the cleanest places to hear it."
       ]
     },
     "Late Night": {
       familiar: [
         `You've been resting in ${params.sourceArtistName}; ${params.albumTitle} lets that night air spread out a little farther.`,
-        `If your ear is still holding the shadow of ${params.sourceArtistName}, ${params.albumTitle} keeps the warmth without forcing it.`
+        `If your ear is still holding the shadow of ${params.sourceArtistName}, ${params.albumTitle} keeps the warmth without pressing on it.`
       ],
       saved: [
         `Since you've kept ${params.albumArtist} near before, ${params.albumTitle} feels even more right after dark.`,
@@ -930,7 +930,7 @@ function buildAlbumRecommendationReasonEn(params: {
       ],
       recent: [
         `With the afterglow of ${params.albumArtist} still in the ear, ${params.albumTitle} continues the mood with almost no seam.`,
-        `You were just near ${params.albumArtist}; ${params.albumTitle} feels like dimming the lamp one final step.`
+        `You were just near ${params.albumArtist}; ${params.albumTitle} feels like turning the lamp down one last notch.`
       ],
       adjacent: [
         `Follow the line of ${params.sourceArtistName} a little deeper into the night and ${params.albumTitle} lets the outlines darken beautifully.`,
@@ -938,20 +938,20 @@ function buildAlbumRecommendationReasonEn(params: {
       ],
       fresh: [
         `If tonight needs a slow beginning, ${params.albumTitle} is a beautiful first record.`,
-        `${params.albumTitle} never states the feeling outright; it simply turns the room dimmer and lets the mood arrive.`
+        `${params.albumTitle} never states the feeling outright; it just lowers the room and lets the mood arrive on its own.`
       ],
       sonic: [
-        "Its shadows and silences are both held deep, like the second half of the night when very little is needed.",
-        "Listening to this feels like the last glint on the edge of a glass: small, slow, and unwilling to disappear."
+        "Its shadows and silences are both held deep, like the back half of the night when very little is needed.",
+        "Listening to this feels like the last glint on the rim of a glass: small, slow, and reluctant to disappear."
       ],
       era: [
         "It has the kind of grain that only really rises at night; by day you hear the outline, after dark you hear the private life inside it.",
-        "Like a single table lamp in an old film, it doesn't need much brightness to hold the entire scene."
+        "Like a single table lamp in an old film, it doesn't need much brightness to hold the whole scene."
       ]
     },
     Focus: {
       familiar: [
-        `You've been staying with ${params.sourceArtistName}; ${params.albumTitle} keeps that clarity open without disturbing the center.`,
+        `You've been staying with ${params.sourceArtistName}; ${params.albumTitle} keeps that clarity open without knocking the center off balance.`,
         `If your ear is still tuned to ${params.sourceArtistName}, ${params.albumTitle} helps the mind gather itself back in.`
       ],
       saved: [
@@ -960,7 +960,7 @@ function buildAlbumRecommendationReasonEn(params: {
       ],
       recent: [
         `With ${params.albumArtist} still fresh in the ear, ${params.albumTitle} brings concentration back almost on its own.`,
-        `You were just near ${params.albumArtist}; ${params.albumTitle} feels like clearing and straightening the desk in one motion.`
+        `You were just near ${params.albumArtist}; ${params.albumTitle} feels like clearing and straightening the desk in a single motion.`
       ],
       adjacent: [
         `Take one step beyond ${params.sourceArtistName} and ${params.albumTitle} keeps the room clean without flattening it.`,
@@ -972,10 +972,10 @@ function buildAlbumRecommendationReasonEn(params: {
       ],
       sonic: [
         "Its rhythm is tidy and unobtrusive, yet it keeps the space quietly held together.",
-        "The lines are clean and the motion steady, like morning light flattening gently across a table."
+        "The lines are clean and the motion steady, like morning light laying itself across a table."
       ],
       era: [
-        "Its virtue is not stimulation but the ability to keep thought in that exact, useful band of clarity.",
+        "Its virtue is not stimulation but the ability to keep thought inside that exact, useful band of clarity.",
         "Like a beautifully set page, it makes both the eye and the mind easier to quiet."
       ]
     }
@@ -1011,7 +1011,7 @@ function buildAlbumRecommendationReasonEn(params: {
 
   if (recentArtists.has(albumArtistKey) && params.sourceTrackTitle) {
     relationshipPool.push(
-      `You recently played ${params.sourceTrackTitle}; heard as a full record, ${params.albumTitle} lets that feeling land with much more shape.`
+      `You recently played ${params.sourceTrackTitle}; heard as a full record, ${params.albumTitle} lets that feeling land with a lot more shape.`
     );
   }
 
@@ -1020,12 +1020,12 @@ function buildAlbumRecommendationReasonEn(params: {
     normalizeText(params.sourceAlbumTitle) !== normalizeText(params.albumTitle)
   ) {
     relationshipPool.push(
-      `If ${params.sourceAlbumTitle} has been living in your ear, ${params.albumTitle} pushes the same horizon a little farther out.`
+      `If ${params.sourceAlbumTitle} has been living in your ear, ${params.albumTitle} pushes that same horizon a little farther out.`
     );
   }
 
   if (params.activeVibe === "Classic") {
-    supportPool.push("It has the kind of settled authority only a true classic carries; one spin and the day has its footing.");
+    supportPool.push("It has the settled authority only a real classic carries; one spin and the day has its footing.");
   }
 
   if (params.activeVibe === "Exploratory") {
@@ -1052,7 +1052,7 @@ function buildAlbumRecommendationReasonEn(params: {
     Math.max(supportPool.length, 1);
   const primary =
     relationshipPool[primaryIndex] ??
-    `${params.albumTitle} sits unusually close to where your ear has already been. Starting here today feels right.`;
+    `${params.albumTitle} sits unusually close to where your ear has already been. Starting here feels right.`;
   const secondaryPool = supportPool.filter((sentence) => sentence !== primary);
   const secondary =
     secondaryPool[secondaryIndex % Math.max(secondaryPool.length, 1)] ??
@@ -1137,24 +1137,24 @@ export function buildCuratedFeed(
   if (locale === "en") {
     const copyByVibeEn: Record<Vibe, { headline: string; note: string }> = {
       Classic: {
-        headline: "Put the classics into today first",
-        note: "Start with the records whose balance never wavers, and let the first album of the day land naturally."
+        headline: "Start with the canon",
+        note: "Begin with records that know how to settle a room without raising their voice."
       },
       Exploratory: {
-        headline: "Lean a little farther out",
-        note: "Push familiar language a little farther from shore and begin with records that slowly widen the ear."
+        headline: "Take the side road",
+        note: "Step a little outside the obvious and start with records that widen the ear by degrees."
       },
       Fusion: {
-        headline: "Let the current in",
-        note: "Begin with records that carry more drive, brighter edges, and a clearer sense of propulsion."
+        headline: "Turn the current up",
+        note: "Start with records that carry more charge, more motion, and a little more voltage in the air."
       },
       "Late Night": {
-        headline: "A few for the later hour",
-        note: "Lower the light a shade and begin with records that breathe more slowly and hold deeper shadows."
+        headline: "For after midnight",
+        note: "Lower the light a shade and start with records that breathe slowly and leave a long afterglow."
       },
       Focus: {
-        headline: "Bring the mind back to center",
-        note: "Start with records that keep their lines clean and their motion steady, so attention can gather itself again."
+        headline: "Hold the center",
+        note: "Begin with records that keep their lines clean and their motion steady, so attention can gather itself again."
       }
     };
 

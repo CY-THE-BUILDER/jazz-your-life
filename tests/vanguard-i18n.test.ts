@@ -34,13 +34,13 @@ describe("vanguard i18n", () => {
   });
 
   it("returns polished English curated copy for translated picks", () => {
-    expect(localizeCuratedReason(curatedPick, "en")).toContain("deepens the air");
+    expect(localizeCuratedReason(curatedPick, "en")).toContain("room to exhale");
     expect(localizeCuratedReason(curatedPick, "zh-Hant")).toBe(curatedPick.recommendationReason);
   });
 
   it("ships English and Chinese UI dictionaries for the footer language toggle", () => {
     expect(getUiCopy("zh-Hant").languageLabel).toBe("語言");
     expect(getUiCopy("en").languageLabel).toBe("Language");
-    expect(getUiCopy("en").shareSheetAction).toBe("Share this record");
+    expect(getUiCopy("en").shareSheetAction).toBe("Share the record");
   });
 });

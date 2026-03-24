@@ -275,8 +275,8 @@ describe("recommendations route", () => {
     const payload = await response.json();
 
     expect(payload.mode).toBe("curated");
-    expect(payload.headline).toBe("Put the classics into today first");
-    expect(payload.note).toContain("balance never wavers");
+    expect(payload.headline).toBe("Start with the canon");
+    expect(payload.note).toContain("settle a room");
   });
 
   it("does not collapse the whole request to curated when Spotify search fails for one query", async () => {

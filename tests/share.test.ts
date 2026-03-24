@@ -67,8 +67,8 @@ describe("share helpers", () => {
     const payload = buildPickSharePayload(pick, "en");
 
     expect(payload.title).toBe("Kind of Blue · Miles Davis");
-    expect(payload.text).toContain("Wanted to pass Kind of Blue your way.");
-    expect(payload.text).toContain("Measured, enduring");
+    expect(payload.text).toContain("Passing Kind of Blue your way.");
+    expect(payload.text).toContain("settle the room");
     expect(payload.text).not.toContain("最近");
   });
 });
