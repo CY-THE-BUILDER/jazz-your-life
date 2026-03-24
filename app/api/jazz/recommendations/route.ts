@@ -283,10 +283,17 @@ async function buildCuratedResponseForVibe(
   rotation: number,
   accessToken?: string | null,
   limit = 5,
-  seed = 0
+  seed = 0,
+  avoidIds: string[] = []
 ) {
   const hydratedCurated = await Promise.all(
-    getCuratedPicksForVibe(vibe, { limit: Math.max(limit + 8, 10), excludeIds: excludedIds, rotation, seed }).map((pick) =>
+    getCuratedPicksForVibe(vibe, {
+      limit: Math.max(limit + 8, 10),
+      excludeIds: excludedIds,
+      rotation,
+      seed,
+      avoidIds
+    }).map((pick) =>
       accessToken ? hydrateCuratedPick(accessToken, pick) : hydratePublicArtworkForPick(pick)
     )
   );
@@ -421,13 +428,14 @@ async function buildFeedForVibe(params: {
   rotation: number;
   seed: number;
   limit: number;
+  avoidIds?: string[];
   accessToken?: string | null;
   listenerData?: ListenerData | null;
 }): Promise<RecommendationFeed> {
-  const { vibe, excludedIds, rotation, seed, limit, accessToken, listenerData } = params;
+  const { vibe, excludedIds, rotation, seed, limit, avoidIds = [], accessToken, listenerData } = params;
 
   if (!accessToken || !listenerData) {
-    return buildCuratedResponseForVibe(vibe, excludedIds, rotation, null, limit, seed);
+    return buildCuratedResponseForVibe(vibe, excludedIds, rotation, null, limit, seed, avoidIds);
   }
 
   const { topArtists, topTracks, recentlyPlayed, savedTracks, tasteProfile } = listenerData;
@@ -511,7 +519,7 @@ async function buildFeedForVibe(params: {
     );
   }
 
-  return buildCuratedResponseForVibe(vibe, excludedIds, rotation, accessToken, limit, seed);
+  return buildCuratedResponseForVibe(vibe, excludedIds, rotation, accessToken, limit, seed, avoidIds);
 }
 
 export async function GET(request: NextRequest) {
@@ -522,6 +530,10 @@ export async function GET(request: NextRequest) {
       .map((value) => value.trim())
       .filter(Boolean)
   );
+  const avoidIds = (request.nextUrl.searchParams.get("avoid") ?? "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
   const rotation = Number.parseInt(request.nextUrl.searchParams.get("rotation") ?? "0", 10) || 0;
   const seed = Number.parseInt(request.nextUrl.searchParams.get("seed") ?? "0", 10) || 0;
   const limit = Math.max(1, Math.min(8, Number.parseInt(request.nextUrl.searchParams.get("limit") ?? "5", 10) || 5));
@@ -534,6 +546,7 @@ export async function GET(request: NextRequest) {
       rotation,
       seed,
       limit,
+      avoidIds,
       accessToken,
       listenerData
     });
@@ -542,7 +555,7 @@ export async function GET(request: NextRequest) {
       headers: { "Cache-Control": "no-store" }
     });
   } catch {
-    const feed = await buildCuratedResponseForVibe(vibe, excludedIds, rotation, null);
+    const feed = await buildCuratedResponseForVibe(vibe, excludedIds, rotation, null, limit, seed, avoidIds);
     return NextResponse.json(feed, {
       headers: { "Cache-Control": "no-store" }
     });
@@ -558,6 +571,7 @@ export async function POST(request: NextRequest) {
     .map((entry) => ({
       vibe: entry.vibe,
       excludeIds: entry.excludeIds ?? [],
+      avoidIds: entry.avoidIds ?? [],
       rotation: entry.rotation ?? 0,
       seed: entry.seed ?? 0,
       limit: entry.limit ?? 5
@@ -582,6 +596,7 @@ export async function POST(request: NextRequest) {
         rotation: entry.rotation,
         seed: entry.seed ?? 0,
         limit: Math.max(1, Math.min(8, entry.limit ?? 5)),
+        avoidIds: entry.avoidIds,
         accessToken,
         listenerData
       });
@@ -591,10 +606,22 @@ export async function POST(request: NextRequest) {
 
     const uniqueFeeds = ensureUniqueFeeds(feeds, {
       seed: requests[0]?.seed ?? 0,
-      priorityVibe: requests[0]?.vibe
+      priorityVibe: requests[0]?.vibe,
+      recentIdsByVibe: Object.fromEntries(
+        requests.map((entry) => [entry.vibe, entry.avoidIds ?? []])
+      )
     }) as RecommendationBatchResponse["feeds"];
 
-    return NextResponse.json({ feeds: uniqueFeeds }, {
+    const hydratedFeeds = Object.fromEntries(
+      await Promise.all(
+        Object.entries(uniqueFeeds).map(async ([vibe, feed]) => [
+          vibe,
+          await finalizeFeedArtwork(feed as RecommendationFeed, requests.find((entry) => entry.vibe === vibe)?.limit ?? 5)
+        ])
+      )
+    ) as RecommendationBatchResponse["feeds"];
+
+    return NextResponse.json({ feeds: hydratedFeeds }, {
       headers: { "Cache-Control": "no-store" }
     });
   } catch {
@@ -607,7 +634,8 @@ export async function POST(request: NextRequest) {
         entry.rotation,
         null,
         Math.max(1, Math.min(8, entry.limit ?? 5)),
-        entry.seed ?? 0
+        entry.seed ?? 0,
+        entry.avoidIds
       );
 
       feeds[entry.vibe] = feed;
@@ -615,10 +643,22 @@ export async function POST(request: NextRequest) {
 
     const uniqueFeeds = ensureUniqueFeeds(feeds, {
       seed: requests[0]?.seed ?? 0,
-      priorityVibe: requests[0]?.vibe
+      priorityVibe: requests[0]?.vibe,
+      recentIdsByVibe: Object.fromEntries(
+        requests.map((entry) => [entry.vibe, entry.avoidIds ?? []])
+      )
     }) as RecommendationBatchResponse["feeds"];
 
-    return NextResponse.json({ feeds: uniqueFeeds }, {
+    const hydratedFeeds = Object.fromEntries(
+      await Promise.all(
+        Object.entries(uniqueFeeds).map(async ([vibe, feed]) => [
+          vibe,
+          await finalizeFeedArtwork(feed as RecommendationFeed, requests.find((entry) => entry.vibe === vibe)?.limit ?? 5)
+        ])
+      )
+    ) as RecommendationBatchResponse["feeds"];
+
+    return NextResponse.json({ feeds: hydratedFeeds }, {
       headers: { "Cache-Control": "no-store" }
     });
   }

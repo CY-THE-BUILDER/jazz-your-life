@@ -137,4 +137,27 @@ describe("recommendation feeds", () => {
     const ids = vibeOptions.flatMap((vibe) => uniqueFeeds[vibe]?.picks.map((pick) => pick.id) ?? []);
     expect(new Set(ids).size).toBe(25);
   });
+
+  it("uses provided recent ids when deduping on the server so the last shelf is not immediately repeated", () => {
+    const repeatedShelf = getCuratedPicksForVibe("Focus", {
+      limit: 5,
+      seed: 14,
+      rotation: 5
+    });
+    const feeds = {
+      Focus: buildCuratedFeed("Focus", repeatedShelf)
+    };
+
+    const uniqueFeeds = ensureUniqueFeeds(feeds, {
+      seed: 14,
+      recentIdsByVibe: {
+        Focus: repeatedShelf.map((pick) => pick.id)
+      }
+    });
+
+    const nextSignature = uniqueFeeds.Focus?.picks.map((pick) => pick.id).join("|");
+    const repeatedSignature = repeatedShelf.map((pick) => pick.id).join("|");
+
+    expect(nextSignature).not.toBe(repeatedSignature);
+  });
 });

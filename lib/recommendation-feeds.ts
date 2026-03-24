@@ -8,6 +8,7 @@ export function ensureUniqueFeeds(
     seed?: number;
     savedIds?: Set<string>;
     priorityVibe?: Vibe;
+    recentIdsByVibe?: Partial<Record<Vibe, string[]>>;
   }
 ) {
   const reservedIds = new Set<string>();
@@ -72,10 +73,11 @@ export function ensureUniqueFeeds(
       }
 
       if (selected.length < targetLength) {
+        const recentIds = options?.recentIdsByVibe?.[vibe] ?? getRecentRecommendationIds(vibe);
         const fallback = getCuratedPicksForVibe(vibe, {
           limit: targetLength * 4,
           seed: seed + index,
-          avoidIds: getRecentRecommendationIds(vibe),
+          avoidIds: recentIds,
           excludeIds: new Set([
             ...savedIds,
             ...reservedIds,
@@ -98,7 +100,10 @@ export function ensureUniqueFeeds(
       }
     }
 
-    const recentIds = getRecentRecommendationIds(vibe).slice(0, targetLength);
+    const recentIds = (options?.recentIdsByVibe?.[vibe] ?? getRecentRecommendationIds(vibe)).slice(
+      0,
+      targetLength
+    );
     const selectedSignature = selected.map((pick) => pick.id).join("|");
     const recentSignature = recentIds.join("|");
 

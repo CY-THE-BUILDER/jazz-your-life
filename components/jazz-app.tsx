@@ -76,6 +76,7 @@ function buildRecommendationRequest(
 ): RecommendationBatchRequest {
   return {
     vibe,
+    avoidIds: getRecentRecommendationIds(vibe),
     excludeIds: Array.from(
       new Set([
         ...savedIds,
@@ -236,6 +237,7 @@ export function JazzApp() {
       const query = new URLSearchParams({
         vibe: request.vibe,
         exclude: request.excludeIds.join(","),
+        avoid: (request.avoidIds ?? []).join(","),
         rotation: String(request.rotation),
         seed: String(request.seed ?? 0),
         limit: String(request.limit ?? initialVisiblePicks)
