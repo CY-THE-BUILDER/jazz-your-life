@@ -35,6 +35,9 @@ function withCover(pick: Omit<JazzPick, "imageUrl">, palette: Parameters<typeof 
 
   return {
     ...pick,
+    localizedRecommendationReasons: {
+      "zh-Hant": pick.recommendationReason
+    },
     imageUrl: createCoverArt(pick.title, pick.artist, palette),
     placeholderImageUrl,
     artworkSourceUrl,

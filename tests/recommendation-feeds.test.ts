@@ -160,4 +160,18 @@ describe("recommendation feeds", () => {
 
     expect(nextSignature).not.toBe(repeatedSignature);
   });
+
+  it("localizes curated fallback picks before using them to backfill an English shelf", () => {
+    const duplicate = getCuratedPicksForVibe("Classic", { limit: 1, seed: 7 })[0];
+    const feeds = {
+      Classic: buildCuratedFeed("Classic", [duplicate]),
+      Exploratory: buildCuratedFeed("Exploratory", [duplicate])
+    };
+
+    const uniqueFeeds = ensureUniqueFeeds(feeds, { seed: 7, locale: "en" });
+    const exploratoryReasons = uniqueFeeds.Exploratory?.picks.map((pick) => pick.recommendationReason) ?? [];
+
+    expect(exploratoryReasons).toHaveLength(5);
+    expect(exploratoryReasons.every((reason) => !/[\u4e00-\u9fff]/.test(reason))).toBe(true);
+  });
 });

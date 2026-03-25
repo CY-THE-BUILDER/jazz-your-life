@@ -1066,7 +1066,8 @@ export function buildTrackPick(
   sourceArtist: SpotifyArtistEntity,
   fallbackVibe: Vibe,
   origin: RecommendationOrigin,
-  reasonOverride?: string
+  reasonOverride?: string,
+  localizedRecommendationReasons?: Partial<Record<AppLocale, string>>
 ): JazzPick {
   const releaseYear = Number(track.album.release_date?.slice(0, 4) ?? new Date().getFullYear());
   const { subgenre, vibeTags } = inferVibes(sourceArtist.genres ?? [], fallbackVibe);
@@ -1077,7 +1078,12 @@ export function buildTrackPick(
     type: "track",
     subgenre,
     vibeTags,
-    recommendationReason: reasonOverride ?? buildReason(sourceArtist.name, origin, fallbackVibe),
+    recommendationReason:
+      reasonOverride ??
+      localizedRecommendationReasons?.["zh-Hant"] ??
+      localizedRecommendationReasons?.en ??
+      buildReason(sourceArtist.name, origin, fallbackVibe),
+    localizedRecommendationReasons,
     imageUrl: track.album.images?.[0]?.url ?? "",
     spotifyUrl: track.external_urls?.spotify ?? `https://open.spotify.com/track/${track.id}`,
     shareUrl: track.external_urls?.spotify ?? `https://open.spotify.com/track/${track.id}`,
@@ -1094,7 +1100,8 @@ export function buildAlbumPick(
   sourceArtist: SpotifyArtistEntity,
   fallbackVibe: Vibe,
   origin: RecommendationOrigin,
-  reasonOverride?: string
+  reasonOverride?: string,
+  localizedRecommendationReasons?: Partial<Record<AppLocale, string>>
 ): JazzPick {
   const releaseYear = Number(album.release_date?.slice(0, 4) ?? new Date().getFullYear());
   const { subgenre, vibeTags } = inferVibes(sourceArtist.genres ?? [], fallbackVibe);
@@ -1106,7 +1113,12 @@ export function buildAlbumPick(
     type: "album",
     subgenre,
     vibeTags,
-    recommendationReason: reasonOverride ?? buildReason(sourceArtist.name, origin, fallbackVibe),
+    recommendationReason:
+      reasonOverride ??
+      localizedRecommendationReasons?.["zh-Hant"] ??
+      localizedRecommendationReasons?.en ??
+      buildReason(sourceArtist.name, origin, fallbackVibe),
+    localizedRecommendationReasons,
     imageUrl: album.images?.[0]?.url ?? "",
     spotifyUrl: album.external_urls?.spotify ?? `https://open.spotify.com/album/${album.id}`,
     shareUrl: album.external_urls?.spotify ?? `https://open.spotify.com/album/${album.id}`,

@@ -1,6 +1,7 @@
 import { getCuratedPicksForVibe } from "@/data/jazz-picks";
 import { getRecentRecommendationIds } from "@/lib/recommendation-history";
-import { RecommendationFeed, Vibe, vibeOptions } from "@/types/jazz";
+import { localizePick } from "@/lib/vanguard-i18n";
+import { AppLocale, RecommendationFeed, Vibe, vibeOptions } from "@/types/jazz";
 
 export function ensureUniqueFeeds(
   feeds: Partial<Record<Vibe, RecommendationFeed>>,
@@ -9,11 +10,13 @@ export function ensureUniqueFeeds(
     savedIds?: Set<string>;
     priorityVibe?: Vibe;
     recentIdsByVibe?: Partial<Record<Vibe, string[]>>;
+    locale?: AppLocale;
   }
 ) {
   const reservedIds = new Set<string>();
   const savedIds = options?.savedIds ?? new Set<string>();
   const seed = options?.seed ?? 0;
+  const locale = options?.locale ?? "zh-Hant";
   const nextFeeds = {} as Partial<Record<Vibe, RecommendationFeed>>;
   const vibesInOrder = vibeOptions
     .filter((vibe) => Boolean(feeds[vibe]))
@@ -84,7 +87,7 @@ export function ensureUniqueFeeds(
             ...selected.map((pick) => pick.id)
           ]),
           softExcludeIds: new Set(recentIds)
-        });
+        }).map((pick) => localizePick(pick, locale));
 
         for (const pick of fallback) {
           if (selected.length >= targetLength) {
@@ -120,7 +123,7 @@ export function ensureUniqueFeeds(
           ...selected.map((pick) => pick.id)
         ]),
         softExcludeIds: new Set(recentIds)
-      });
+      }).map((pick) => localizePick(pick, locale));
 
       for (const alternate of alternatePicks) {
         if (selected.some((pick) => pick.id === alternate.id) || reservedIds.has(alternate.id)) {

@@ -60,6 +60,19 @@ type ListenerData = {
   tasteProfile: ListenerTasteProfile;
 };
 
+function buildLocalizedAlbumReasons(params: Parameters<typeof buildAlbumRecommendationReason>[0]) {
+  return {
+    "zh-Hant": buildAlbumRecommendationReason({
+      ...params,
+      locale: "zh-Hant"
+    }),
+    en: buildAlbumRecommendationReason({
+      ...params,
+      locale: "en"
+    })
+  } as const;
+}
+
 function matchesCuratedJazzArtist(name: string) {
   const lowered = name.toLowerCase();
   return jazzPicks.some(
@@ -199,7 +212,14 @@ async function hydrateCuratedPick(accessToken: string, pick: JazzPick) {
     }
 
     const sourceArtist = track.artists[0];
-    return buildTrackPick(track, sourceArtist, pick.vibeTags[0], "search", pick.recommendationReason);
+    return buildTrackPick(
+      track,
+      sourceArtist,
+      pick.vibeTags[0],
+      "search",
+      pick.recommendationReason,
+      pick.localizedRecommendationReasons
+    );
   }
 
   const album = response.albums?.items[0];
@@ -208,7 +228,14 @@ async function hydrateCuratedPick(accessToken: string, pick: JazzPick) {
   }
 
   const sourceArtist = album.artists?.[0] ?? { id: "unknown", name: pick.artist, genres: [] };
-  return buildAlbumPick(album, sourceArtist, pick.vibeTags[0], "search", pick.recommendationReason);
+  return buildAlbumPick(
+    album,
+    sourceArtist,
+    pick.vibeTags[0],
+    "search",
+    pick.recommendationReason,
+    pick.localizedRecommendationReasons
+  );
 }
 
 async function buildSearchDrivenPicks(
@@ -250,23 +277,25 @@ async function buildSearchDrivenPicks(
           .filter((album) => isRecommendableAlbum(album) && !excludedAlbumIds.has(album.id))
           .map((album) => {
             const basePick = buildAlbumPick(album, artist, activeVibe, "search");
+            const localizedReasons = buildLocalizedAlbumReasons({
+              albumId: album.id,
+              albumTitle: album.name,
+              albumArtist: basePick.artist,
+              albumYear: basePick.year,
+              subgenre: basePick.subgenre,
+              activeVibe,
+              tasteProfile,
+              sourceArtistName: artist.name,
+              origin: "search",
+              locale
+            });
             return buildAlbumPick(
               album,
               artist,
               activeVibe,
               "search",
-              buildAlbumRecommendationReason({
-                albumId: album.id,
-                albumTitle: album.name,
-                albumArtist: basePick.artist,
-                albumYear: basePick.year,
-                subgenre: basePick.subgenre,
-                activeVibe,
-                tasteProfile,
-                sourceArtistName: artist.name,
-                origin: "search",
-                locale
-              })
+              localizedReasons[locale],
+              localizedReasons
             );
           });
 
@@ -359,10 +388,8 @@ async function finalizeFeedArtwork(feed: RecommendationFeed, limit: number) {
 function localizeFeed(feed: RecommendationFeed, locale: AppLocale): RecommendationFeed {
   return {
     ...feed,
-    picks: feed.picks.map((pick) => (pick.source === "curated" ? localizePick(pick, locale) : pick)),
-    reservePicks: (feed.reservePicks ?? []).map((pick) =>
-      pick.source === "curated" ? localizePick(pick, locale) : pick
-    )
+    picks: feed.picks.map((pick) => localizePick(pick, locale)),
+    reservePicks: (feed.reservePicks ?? []).map((pick) => localizePick(pick, locale))
   };
 }
 
@@ -390,6 +417,20 @@ function buildSignalDrivenPicks(
             .map((artist) => topArtistMap.get(artist.id) ?? artist)
             .find(isJazzAdjacentArtist) ?? track.artists[0];
         const basePick = buildAlbumPick(track.album, sourceArtist, activeVibe, origin);
+        const localizedReasons = buildLocalizedAlbumReasons({
+          albumId: track.album.id,
+          albumTitle: basePick.title,
+          albumArtist: basePick.artist,
+          albumYear: basePick.year,
+          subgenre: basePick.subgenre,
+          activeVibe,
+          tasteProfile,
+          sourceArtistName: sourceArtist.name,
+          origin,
+          sourceTrackTitle: track.name,
+          sourceAlbumTitle: track.album.name,
+          locale
+        });
 
         return {
           pick: buildAlbumPick(
@@ -397,20 +438,8 @@ function buildSignalDrivenPicks(
             sourceArtist,
             activeVibe,
             origin,
-            buildAlbumRecommendationReason({
-              albumId: track.album.id,
-              albumTitle: basePick.title,
-              albumArtist: basePick.artist,
-              albumYear: basePick.year,
-              subgenre: basePick.subgenre,
-              activeVibe,
-              tasteProfile,
-              sourceArtistName: sourceArtist.name,
-              origin,
-              sourceTrackTitle: track.name,
-              sourceAlbumTitle: track.album.name,
-              locale
-            })
+            localizedReasons[locale],
+            localizedReasons
           ),
           allowed:
             isRecommendableAlbum(track.album) &&
@@ -696,6 +725,7 @@ export async function POST(request: NextRequest) {
       seed: requests[0]?.seed ?? 0,
       savedIds,
       priorityVibe: requests[0]?.vibe,
+      locale: requests[0]?.locale ?? "zh-Hant",
       recentIdsByVibe: Object.fromEntries(
         requests.map((entry) => [entry.vibe, entry.avoidIds ?? []])
       )
@@ -737,6 +767,7 @@ export async function POST(request: NextRequest) {
       seed: requests[0]?.seed ?? 0,
       savedIds,
       priorityVibe: requests[0]?.vibe,
+      locale: requests[0]?.locale ?? "zh-Hant",
       recentIdsByVibe: Object.fromEntries(
         requests.map((entry) => [entry.vibe, entry.avoidIds ?? []])
       )

@@ -8,9 +8,11 @@
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run",
+    "telemetry:event": "node scripts/data-planting/send-github-telemetry.mjs",
+    "telemetry:plant": "node scripts/data-planting/append-commit-event.mjs",
     "test:component": "npm test",
     "test:system": "bash scripts/ci/missing-system-tests.sh",
-    "test:smoke": "bash scripts/ci/missing-smoke-tests.sh"
+    "test:smoke": "node scripts/ci/production-smoke.mjs"
   },
   "dependencies": {
     "framer-motion": "^11.11.9",

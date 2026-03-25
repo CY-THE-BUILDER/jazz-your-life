@@ -80,7 +80,7 @@ function buildFallbackFeedMap(
     });
   }
 
-  return ensureUniqueFeeds(feeds, { savedIds, seed }) as Record<Vibe, RecommendationFeed>;
+  return ensureUniqueFeeds(feeds, { savedIds, seed, locale }) as Record<Vibe, RecommendationFeed>;
 }
 
 function buildRecommendationRequest(
@@ -189,7 +189,7 @@ export function JazzApp() {
 
   const savedIds = useMemo(() => new Set(savedPicks.map((pick) => pick.id)), [savedPicks]);
   const localizedSavedPicks = useMemo(
-    () => savedPicks.map((pick) => (pick.source === "curated" ? localizePick(pick, locale) : pick)),
+    () => savedPicks.map((pick) => localizePick(pick, locale)),
     [locale, savedPicks]
   );
   const copy = getUiCopy(locale);
@@ -302,7 +302,7 @@ export function JazzApp() {
                 ...current,
                 [activeVibe]: nextFeed
               },
-              { savedIds, seed: sessionSeed, priorityVibe: activeVibe }
+              { savedIds, seed: sessionSeed, priorityVibe: activeVibe, locale }
             )
           } as Record<Vibe, RecommendationFeed>));
           setHydratedVibes((current) => ({
@@ -370,7 +370,7 @@ export function JazzApp() {
                 ...current,
                 ...payload.feeds
               },
-              { savedIds, seed: sessionSeed, priorityVibe: activeVibe }
+              { savedIds, seed: sessionSeed, priorityVibe: activeVibe, locale }
             )
           } as Record<Vibe, RecommendationFeed>));
           setHydratedVibes((current) => ({

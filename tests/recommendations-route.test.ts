@@ -277,6 +277,21 @@ describe("recommendations route", () => {
     expect(payload.mode).toBe("curated");
     expect(payload.headline).toBe("Start with the canon");
     expect(payload.note).toContain("settle a room");
+    expect(payload.picks.every((pick: { recommendationReason: string }) => !/[\u4e00-\u9fff]/.test(pick.recommendationReason))).toBe(true);
+  });
+
+  it("returns fully localized curated reasons for zh-Hant without leaking English copy", async () => {
+    mockGetValidSpotifyAccessToken.mockResolvedValue(null);
+
+    const { GET } = await import("@/app/api/jazz/recommendations/route");
+    const request = new NextRequest(
+      "https://vanguard.noesis.studio/api/jazz/recommendations?vibe=Fusion&limit=3&locale=zh-Hant"
+    );
+    const response = await GET(request);
+    const payload = await response.json();
+
+    expect(payload.mode).toBe("curated");
+    expect(payload.picks.every((pick: { recommendationReason: string }) => /[\u4e00-\u9fff]/.test(pick.recommendationReason))).toBe(true);
   });
 
   it("does not collapse the whole request to curated when Spotify search fails for one query", async () => {

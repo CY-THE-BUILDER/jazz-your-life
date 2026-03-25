@@ -3,6 +3,7 @@ import {
   detectPreferredLocale,
   getUiCopy,
   isTraditionalChineseLocale,
+  localizePick,
   localizeCuratedReason
 } from "@/lib/vanguard-i18n";
 import { JazzPick } from "@/types/jazz";
@@ -38,9 +39,51 @@ describe("vanguard i18n", () => {
     expect(localizeCuratedReason(curatedPick, "zh-Hant")).toBe(curatedPick.recommendationReason);
   });
 
+  it("keeps curated Chinese and English reasons fully separate when switching locales", () => {
+    const englishPick = localizePick(curatedPick, "en");
+    const switchedBack = localizePick(englishPick, "zh-Hant");
+
+    expect(englishPick.recommendationReason).toContain("room to exhale");
+    expect(switchedBack.recommendationReason).toBe(
+      "當你想把房間的光線降下來，這張會用極少的音符把空氣拉得很深。"
+    );
+  });
+
   it("ships English and Chinese UI dictionaries for the footer language toggle", () => {
     expect(getUiCopy("zh-Hant").languageLabel).toBe("語言");
     expect(getUiCopy("en").languageLabel).toBe("Language");
     expect(getUiCopy("en").shareSheetAction).toBe("Share the record");
+  });
+
+  it("localizes spotify toasts and connection labels in both languages", () => {
+    const zh = getUiCopy("zh-Hant");
+    const en = getUiCopy("en");
+
+    expect(zh.toastSpotifyConnected).toBe("Spotify 已連接。");
+    expect(zh.toastDisconnected).toBe("已中斷 Spotify 連線。");
+    expect(zh.spotifyConnectedLabel("Hank")).toBe("已連接 Hank");
+
+    expect(en.toastSpotifyConnected).toBe("Spotify connected.");
+    expect(en.toastDisconnected).toBe("Spotify disconnected.");
+    expect(en.spotifyConnectedLabel("Hank")).toBe("Connected: Hank");
+  });
+
+  it("keeps interactive copy fully localized across buttons, share UI, and spotify notifications", () => {
+    const zh = getUiCopy("zh-Hant");
+    const en = getUiCopy("en");
+
+    expect(zh.openSpotify).toBe("前往 Spotify");
+    expect(zh.share).toBe("分享");
+    expect(zh.save).toBe("收藏");
+    expect(zh.spotifyDisconnect).toBe("中斷連線");
+    expect(zh.shareSheetEyebrow).toBe("分享這一刻");
+    expect(zh.toastSpotifyDenied).toBe("已取消 Spotify 授權。");
+
+    expect(en.openSpotify).toBe("Open in Spotify");
+    expect(en.share).toBe("Share");
+    expect(en.save).toBe("Save");
+    expect(en.spotifyDisconnect).toBe("Disconnect");
+    expect(en.shareSheetEyebrow).toBe("Pass this one on");
+    expect(en.toastSpotifyDenied).toBe("Spotify authorization was cancelled.");
   });
 });

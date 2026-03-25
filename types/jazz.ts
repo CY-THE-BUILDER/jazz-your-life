@@ -18,6 +18,7 @@ export type JazzPick = {
   subgenre: string;
   vibeTags: Vibe[];
   recommendationReason: string;
+  localizedRecommendationReasons?: Partial<Record<AppLocale, string>>;
   imageUrl: string;
   placeholderImageUrl?: string;
   spotifyUrl: string;

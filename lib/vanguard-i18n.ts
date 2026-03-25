@@ -1,3 +1,4 @@
+import { jazzPicks } from "@/data/jazz-picks";
 import { AppLocale, JazzPick, Vibe } from "@/types/jazz";
 
 const LOCALE_KEY = "vanguard-locale";
@@ -52,7 +53,44 @@ const curatedReasonEnById: Record<string, string> = {
   "alone-together": "Guitar and bass leave each other generous room while staying on the same quiet line. Ideal for long concentration.",
   crescent: "It lets the tension glow from underneath instead of forcing it to the surface.",
   "you-must-believe-in-spring": "It doesn't explain the feeling. It lets it hang in the room long enough for you to meet it yourself."
+  ,
+  milestones: "No warm-up, no unnecessary ceremony. The order and the tension are already exactly where they should be.",
+  "portrait-in-jazz": "Light on its feet, firm at the center. The kind of trio date that knows how to set a room right without showing off.",
+  "brilliant-corners": "Angular, exact, and full of wit. A classic that proves control and surprise can live in the same bar.",
+  "soul-station": "Warm tone, easy spring, no wasted motion. A beautiful way to let the day settle into focus.",
+  "clifford-brown-and-max-roach": "Bright attack, clean lift, and hard swing carried with total ease. This is old-school elegance with real fire in it.",
+  contours: "It leaves the lines slightly open, which only makes each turn linger longer in the ear.",
+  "the-real-mccoy": "The tension doesn't burst. It keeps spreading outward through the piano and drums until the whole frame feels wider.",
+  evolution: "It opens the space and lets the sound travel deeper under its own weight.",
+  "unit-structures": "Not made for comfort, and that's part of its force. It pulls the ear farther out than it expected to go.",
+  "inner-mounting-flame": "Speed and density both lean forward here. The whole thing feels wired from the inside out.",
+  spectrum: "The drums and electric textures lock like gears. Pure forward thrust, no drag anywhere.",
+  "mr-hands": "Smoother on the surface, sharper in the bloodstream. It brings the body and the ear along together.",
+  secrets: "The electric sheen never floods the room. It stays close to the edge, glowing just enough.",
+  "hymn-of-the-seventh-galaxy": "This one isn't only fast. It shines through the turns, every corner catching a little more light.",
+  "the-melody-at-night-with-you": "Almost nothing extra, just touch, air, and the kind of late-night light that moves slowly across the room.",
+  "know-what-i-mean": "Nothing overstated, but the feeling keeps gathering at the ends of phrases.",
+  "we-get-requests": "Light-footed, beautifully clean, and exactly right when the night needs to slow down a notch.",
+  "round-about-midnight": "Night isn't the backdrop here. It's the point at which the whole record really begins to glow.",
+  interplay: "The time is exact, the silences do their job, and the whole album gives attention somewhere solid to stand.",
+  "speak-like-a-child": "It never pushes feeling too hard. It just keeps shape, color, and rhythm in exquisitely calm balance.",
+  "the-bridge": "Steady stride, clear horizon. A record that knows how to leave room for thought without thinning out.",
+  "empyrean-isles": "The center holds even while the details keep moving. An easy record to stay inside for a long stretch of work.",
+  "quiet-kenny": "Close-miked in feeling, never claustrophobic. A beautiful late-night record when everything needs to turn inward a little.",
+  "night-train": "The gait is easy, the warmth stays close, and the later it gets, the better it sits.",
+  concierto: "Clean, open, and lit with the kind of glow that only shows itself after dark.",
+  "page-one": "Clear lines, steady momentum, and somewhere dependable for the mind to land.",
+  "takin-off": "Crisp rhythm, no excess gesture. Ideal when you need the day to click back into alignment.",
+  "hub-tones": "The outline stays bright without getting pushy. Just enough force to keep concentration moving forward.",
+  juju: "The lines run deep, but the logic stays clear. The farther in you go, the easier it is to gather yourself.",
+  "search-for-the-new-land": "It doesn't chase momentum with noise. It walks forward steadily and brings the mind along with it.",
+  "one-flight-up": "Long breath, no sag. Perfect when the brain needs time to settle into its working stride.",
+  "no-room-for-squares": "The rhythm, the tone, the use of space: all of it is judged with real precision, and it only gets more satisfying as it goes."
 };
+
+const curatedReasonZhById: Record<string, string> = Object.fromEntries(
+  jazzPicks.map((pick) => [pick.id, pick.localizedRecommendationReasons?.["zh-Hant"] ?? pick.recommendationReason])
+);
 
 const uiCopy = {
   "zh-Hant": {
@@ -286,15 +324,41 @@ export function getUiCopy(locale: AppLocale) {
 
 export function localizeCuratedReason(pick: JazzPick, locale: AppLocale) {
   if (locale === "zh-Hant") {
-    return pick.recommendationReason;
+    return (
+      pick.localizedRecommendationReasons?.["zh-Hant"] ??
+      curatedReasonZhById[pick.id] ??
+      pick.recommendationReason
+    );
   }
 
-  return curatedReasonEnById[pick.id] ?? pick.recommendationReason;
+  return (
+    pick.localizedRecommendationReasons?.en ??
+    curatedReasonEnById[pick.id] ??
+    pick.recommendationReason
+  );
 }
 
 export function localizePick(pick: JazzPick, locale: AppLocale): JazzPick {
+  const localizedRecommendationReasons =
+    pick.source === "curated"
+      ? {
+          "zh-Hant":
+            pick.localizedRecommendationReasons?.["zh-Hant"] ??
+            curatedReasonZhById[pick.id] ??
+            pick.recommendationReason,
+          en:
+            pick.localizedRecommendationReasons?.en ??
+            curatedReasonEnById[pick.id] ??
+            pick.recommendationReason
+        }
+      : pick.localizedRecommendationReasons;
+
   return {
     ...pick,
-    recommendationReason: localizeCuratedReason(pick, locale)
+    localizedRecommendationReasons,
+    recommendationReason:
+      locale === "zh-Hant"
+        ? localizedRecommendationReasons?.["zh-Hant"] ?? pick.recommendationReason
+        : localizedRecommendationReasons?.en ?? pick.recommendationReason
   };
 }
