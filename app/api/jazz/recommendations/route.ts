@@ -673,6 +673,7 @@ export async function POST(request: NextRequest) {
   try {
     const listenerData = accessToken ? await loadListenerData(accessToken) : null;
     const feeds = {} as RecommendationBatchResponse["feeds"];
+    const savedIds = new Set(requests.flatMap((entry) => entry.savedIds));
 
     for (const entry of requests) {
       const feed = await buildFeedForVibe({
@@ -693,6 +694,7 @@ export async function POST(request: NextRequest) {
 
     const uniqueFeeds = ensureUniqueFeeds(feeds, {
       seed: requests[0]?.seed ?? 0,
+      savedIds,
       priorityVibe: requests[0]?.vibe,
       recentIdsByVibe: Object.fromEntries(
         requests.map((entry) => [entry.vibe, entry.avoidIds ?? []])
@@ -713,6 +715,7 @@ export async function POST(request: NextRequest) {
     });
   } catch {
     const feeds = {} as RecommendationBatchResponse["feeds"];
+    const savedIds = new Set(requests.flatMap((entry) => entry.savedIds));
 
     for (const entry of requests) {
       const feed = await buildCuratedResponseForVibe(
@@ -732,6 +735,7 @@ export async function POST(request: NextRequest) {
 
     const uniqueFeeds = ensureUniqueFeeds(feeds, {
       seed: requests[0]?.seed ?? 0,
+      savedIds,
       priorityVibe: requests[0]?.vibe,
       recentIdsByVibe: Object.fromEntries(
         requests.map((entry) => [entry.vibe, entry.avoidIds ?? []])
