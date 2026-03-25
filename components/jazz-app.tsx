@@ -25,6 +25,7 @@ import {
   readStoredSpotifySession,
   writeStoredSpotifySession
 } from "@/lib/spotify-session";
+import { resolveSpotifyStatusToast } from "@/lib/spotify-status";
 import {
   detectPreferredLocale,
   getStoredLocale,
@@ -212,25 +213,17 @@ export function JazzApp() {
   }
 
   useEffect(() => {
-    const currentUrl = new URL(window.location.href);
-    const spotifyStatus = currentUrl.searchParams.get("spotify");
-    if (!spotifyStatus) {
+    const result = resolveSpotifyStatusToast(window.location.href, locale, isReady);
+    if (!result) {
       return;
     }
 
-    if (spotifyStatus === "connected") {
-      pushToast(copy.toastSpotifyConnected);
-    } else if (spotifyStatus === "denied") {
-      pushToast(copy.toastSpotifyDenied);
-    } else if (spotifyStatus === "misconfigured") {
-      pushToast(copy.toastSpotifyMisconfigured);
-    } else if (spotifyStatus === "error") {
-      pushToast(copy.toastSpotifyError);
+    if (result.text) {
+      pushToast(result.text);
     }
 
-    currentUrl.searchParams.delete("spotify");
-    window.history.replaceState({}, "", currentUrl.toString());
-  }, [copy.toastSpotifyConnected, copy.toastSpotifyDenied, copy.toastSpotifyError, copy.toastSpotifyMisconfigured]);
+    window.history.replaceState({}, "", result.nextUrl);
+  }, [isReady, locale]);
 
   useEffect(() => {
     if (!isReady) {
